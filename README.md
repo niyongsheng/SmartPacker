@@ -4,13 +4,10 @@
 ![Pages](https://img.shields.io/badge/Developing-0.0.1-brightgreen.svg?style=flat-square)
 ===
 
-> 智能装箱库。<br>
-> Smart container storage.
-
-
+> 智能装箱算法是一类用于优化物品放置在有限容器或箱子中的方式的算法。它们的目标是最大程度地减小所需的容器数量，或者最小化剩余空间，以便在物流、货物运输和仓储等领域提高效率。这些算法可以应用于各种领域，包括电子商务、供应链管理和生产制造。
 ## Modules:
 - [x] [Java jar]()
-- [x] [Vue compone]()
+- [x] [Vue component]()
 
 
 ## Contact Me
