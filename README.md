@@ -5,10 +5,18 @@
 ===
 
 > 智能装箱算法是一类用于优化物品放置在有限容器或箱子中的方式的算法。它们的目标是最大程度地减小所需的容器数量，或者最小化剩余空间，以便在物流、货物运输和仓储等领域提高效率。这些算法可以应用于各种领域，包括电子商务、供应链管理和生产制造。
-## Modules:
-- [x] [Java jar]()
-- [x] [Vue component]()
 
+## Stack:
+* [java8]()
+* [vue2]()
+* [Three.js]()
+
+## Package:
+- [ ] [Maven .jar]()
+- [ ] [Component .vue]()
+
+## Demo
+<img src="./Oct-21-2023 16-30-48.gif">
 
 ## Contact Me
 * E-mail: niyongsheng@Outlook.com
