@@ -17,7 +17,7 @@
 - [ ] [Component .vue]()
 
 ## Example Demo
-To see the packing algorithm in action, you can check out the live demo [here]()
+To see the packing algorithm in action, you can check out the live demo [here](http://119.3.128.220:8100)
 <img src="./Oct-21-2023 18-30-24.gif">
 
 ## Contact Me
