@@ -18,7 +18,8 @@
 
 ## Example Demo
 To see the packing algorithm in action, you can check out the live demo [here](http://119.3.128.220:8100)
-<img src="./Oct-21-2023 18-30-24.gif">
+<img src="./Nov-01-2023 17-26-40.gif">
+<img src="./Nov-01-2023 17-30-40.gif">
 
 ## Contact Me
 * E-mail: niyongsheng@Outlook.com
