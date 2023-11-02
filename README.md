@@ -18,8 +18,7 @@
 
 ## Example Demo
 To see the packing algorithm in action, you can check out the live demo [here](http://119.3.128.220:8100)
-<img src="./Nov-01-2023 17-26-40.gif">
-<img src="./Nov-01-2023 17-30-40.gif">
+[![Watch the video](https://github.com/niyongsheng/niyongsheng.github.io/blob/master/Document/video_%20placeholder.png?raw=true)](https://www.bilibili.com/video/BV1jC4y1H7Up/)
 
 ## Contact Me
 * E-mail: niyongsheng@Outlook.com
