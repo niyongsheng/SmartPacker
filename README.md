@@ -16,6 +16,11 @@
 - [ ] [Maven .jar]()
 - [ ] [Component .vue]()
 
+## New Feature
+纵向堆叠 | 横向堆叠 | 卸货通道 | 透明预览 | 智能调度
+--- | --- | --- | --- | ---
+<img src="./gif/Nov-07-2023 16-24-03.gif" width="200"> | <img src="./gif/Nov-07-2023 16-38-51.gif" width="200"> | <img src="./gif/Nov-07-2023 16-47-30.gif" width="200"> | <img src="./gif/Nov-07-2023 16-52-27.gif" width="200"> | <img src="./gif/Nov-07-2023 16-42-00.gif" width="200"> 
+
 ## Example Demo
 To see the packing algorithm in action, you can check out the live demo [here](http://119.3.128.220:8100)
 [![Watch the video](https://github.com/niyongsheng/niyongsheng.github.io/blob/master/Document/video_%20placeholder.png?raw=true)](https://www.bilibili.com/video/BV1jC4y1H7Up/)
