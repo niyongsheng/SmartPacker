@@ -1,0 +1,14 @@
+[workspace]
+members = ["smartpacker", "smartpacker-server"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "MIT"
+repository = "https://github.com/niyongsheng/SmartPacker"
+authors = ["Nico <niyongsheng@outlook.com>"]
+
+[profile.release]
+lto = true
