@@ -1,0 +1,664 @@
+{
+  "name": "ex1_cylinder",
+  "options": {
+    "bigger_first": true,
+    "distribute_items": false,
+    "fix_point": true,
+    "check_stable": true,
+    "support_surface_ratio": 0.75,
+    "number_of_decimals": 0,
+    "binding": []
+  },
+  "input": {
+    "bins": [
+      {
+        "partno": "example1",
+        "whd": [
+          5.6875,
+          10.75,
+          15.0
+        ],
+        "max_weight": 70.0,
+        "corner": 0,
+        "put_type": 0
+      }
+    ],
+    "items": [
+      {
+        "partno": "50g [powder 1]",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          2,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "red"
+      },
+      {
+        "partno": "50g [powder 2]",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          2,
+          4
+        ],
+        "weight": 2,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "blue"
+      },
+      {
+        "partno": "50g [powder 3]",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          2,
+          4
+        ],
+        "weight": 3,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "gray"
+      },
+      {
+        "partno": "50g [powder 4]",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          2,
+          4
+        ],
+        "weight": 3,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "orange"
+      },
+      {
+        "partno": "50g [powder 5]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          2,
+          2,
+          4
+        ],
+        "weight": 3,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "lawngreen"
+      },
+      {
+        "partno": "50g [powder 6]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          2,
+          2,
+          4
+        ],
+        "weight": 3,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "purple"
+      },
+      {
+        "partno": "50g [powder 7]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          1,
+          1,
+          5
+        ],
+        "weight": 3,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "yellow"
+      },
+      {
+        "partno": "250g [powder 8]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          4,
+          4,
+          2
+        ],
+        "weight": 4,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "pink"
+      },
+      {
+        "partno": "250g [powder 9]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          4,
+          4,
+          2
+        ],
+        "weight": 5,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "brown"
+      },
+      {
+        "partno": "250g [powder 10]",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          4,
+          2
+        ],
+        "weight": 6,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "cyan"
+      },
+      {
+        "partno": "250g [powder 11]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          4,
+          4,
+          2
+        ],
+        "weight": 7,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "olive"
+      },
+      {
+        "partno": "250g [powder 12]",
+        "name": "test",
+        "typeof": "cylinder",
+        "whd": [
+          4,
+          4,
+          2
+        ],
+        "weight": 8,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "darkgreen"
+      },
+      {
+        "partno": "250g [powder 13]",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          4,
+          2
+        ],
+        "weight": 9,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "orange"
+      }
+    ]
+  },
+  "expected": {
+    "bins": [
+      {
+        "partno": "example1",
+        "width": 6.0,
+        "height": 11.0,
+        "depth": 15.0,
+        "max_weight": 70.0,
+        "corner": 0.0,
+        "put_type": 0,
+        "gravity": [
+          62.28,
+          5.26,
+          32.46,
+          0.0
+        ],
+        "items": [
+          {
+            "partno": "250g [powder 8]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 4.0,
+            "color": "pink",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "250g [powder 9]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 5.0,
+            "color": "brown",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              4.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "250g [powder 10]",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 6.0,
+            "color": "cyan",
+            "rotation_type": 2,
+            "position": [
+              0.0,
+              8.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "250g [powder 11]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 7.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "partno": "250g [powder 12]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 8.0,
+            "color": "darkgreen",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              4.0,
+              2.0
+            ]
+          },
+          {
+            "partno": "250g [powder 13]",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 9.0,
+            "color": "orange",
+            "rotation_type": 2,
+            "position": [
+              0.0,
+              0.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 1]",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "red",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 2]",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 2.0,
+            "color": "blue",
+            "rotation_type": 0,
+            "position": [
+              2.0,
+              2.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 3]",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 3.0,
+            "color": "gray",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              4.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 4]",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 3.0,
+            "color": "orange",
+            "rotation_type": 0,
+            "position": [
+              2.0,
+              4.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 5]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 2.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 3.0,
+            "color": "lawngreen",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              6.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 6]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 2.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 3.0,
+            "color": "purple",
+            "rotation_type": 0,
+            "position": [
+              2.0,
+              6.0,
+              4.0
+            ]
+          },
+          {
+            "partno": "50g [powder 7]",
+            "name": "test",
+            "typeof": "cylinder",
+            "width": 1.0,
+            "height": 1.0,
+            "depth": 5.0,
+            "weight": 3.0,
+            "color": "yellow",
+            "rotation_type": 0,
+            "position": [
+              4.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "unfitted_items": []
+      }
+    ],
+    "unfit_items": [
+      {
+        "partno": "250g [powder 8]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 4.0,
+        "color": "pink",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "250g [powder 9]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 5.0,
+        "color": "brown",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          4.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "250g [powder 10]",
+        "name": "test",
+        "typeof": "cube",
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 6.0,
+        "color": "cyan",
+        "rotation_type": 2,
+        "position": [
+          0.0,
+          8.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "250g [powder 11]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 7.0,
+        "color": "olive",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          2.0
+        ]
+      },
+      {
+        "partno": "250g [powder 12]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 8.0,
+        "color": "darkgreen",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          4.0,
+          2.0
+        ]
+      },
+      {
+        "partno": "250g [powder 13]",
+        "name": "test",
+        "typeof": "cube",
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 9.0,
+        "color": "orange",
+        "rotation_type": 2,
+        "position": [
+          0.0,
+          0.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 1]",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 4.0,
+        "weight": 1.0,
+        "color": "red",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          2.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 2]",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 4.0,
+        "weight": 2.0,
+        "color": "blue",
+        "rotation_type": 0,
+        "position": [
+          2.0,
+          2.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 3]",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 4.0,
+        "weight": 3.0,
+        "color": "gray",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          4.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 4]",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 4.0,
+        "weight": 3.0,
+        "color": "orange",
+        "rotation_type": 0,
+        "position": [
+          2.0,
+          4.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 5]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 4.0,
+        "weight": 3.0,
+        "color": "lawngreen",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          6.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 6]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 4.0,
+        "weight": 3.0,
+        "color": "purple",
+        "rotation_type": 0,
+        "position": [
+          2.0,
+          6.0,
+          4.0
+        ]
+      },
+      {
+        "partno": "50g [powder 7]",
+        "name": "test",
+        "typeof": "cylinder",
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 5.0,
+        "weight": 3.0,
+        "color": "yellow",
+        "rotation_type": 0,
+        "position": [
+          4.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  }
+}

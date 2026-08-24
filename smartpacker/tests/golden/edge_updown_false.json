@@ -1,0 +1,207 @@
+{
+  "name": "edge_updown_false",
+  "options": {
+    "bigger_first": true,
+    "distribute_items": true,
+    "fix_point": true,
+    "check_stable": true,
+    "support_surface_ratio": 0.75,
+    "number_of_decimals": 0,
+    "binding": []
+  },
+  "input": {
+    "bins": [
+      {
+        "partno": "edge_updown",
+        "whd": [
+          20,
+          20,
+          20
+        ],
+        "max_weight": 1000,
+        "corner": 0,
+        "put_type": 1
+      }
+    ],
+    "items": [
+      {
+        "partno": "u1",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          5,
+          8,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "red"
+      },
+      {
+        "partno": "u2",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          6,
+          4,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "blue"
+      },
+      {
+        "partno": "u3",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          3,
+          9,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "gray"
+      },
+      {
+        "partno": "u4",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          4,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "orange"
+      },
+      {
+        "partno": "u5",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          9,
+          2,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": false,
+        "color": "lawngreen"
+      }
+    ]
+  },
+  "expected": {
+    "bins": [
+      {
+        "partno": "edge_updown",
+        "width": 20.0,
+        "height": 20.0,
+        "depth": 20.0,
+        "max_weight": 1000.0,
+        "corner": 0.0,
+        "put_type": 1,
+        "gravity": [
+          55.0,
+          40.0,
+          5.0,
+          0.0
+        ],
+        "items": [
+          {
+            "partno": "u1",
+            "name": "test",
+            "typeof": "cube",
+            "width": 5.0,
+            "height": 8.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "red",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "u3",
+            "name": "test",
+            "typeof": "cube",
+            "width": 3.0,
+            "height": 9.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "gray",
+            "rotation_type": 0,
+            "position": [
+              5.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "u4",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 4.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "orange",
+            "rotation_type": 0,
+            "position": [
+              8.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "u2",
+            "name": "test",
+            "typeof": "cube",
+            "width": 6.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "blue",
+            "rotation_type": 0,
+            "position": [
+              12.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "u5",
+            "name": "test",
+            "typeof": "cube",
+            "width": 9.0,
+            "height": 2.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "lawngreen",
+            "rotation_type": 1,
+            "position": [
+              18.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "unfitted_items": []
+      }
+    ],
+    "unfit_items": []
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "name": "ex3",
+  "options": {
+    "bigger_first": true,
+    "distribute_items": false,
+    "fix_point": true,
+    "check_stable": true,
+    "support_surface_ratio": 0.75,
+    "number_of_decimals": 0,
+    "binding": []
+  },
+  "input": {
+    "bins": [
+      {
+        "partno": "example3",
+        "whd": [
+          6,
+          1,
+          5
+        ],
+        "max_weight": 100,
+        "corner": 0,
+        "put_type": 0
+      }
+    ],
+    "items": [
+      {
+        "partno": "Box-1",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          1,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "yellow"
+      },
+      {
+        "partno": "Box-2",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          3,
+          1,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "pink"
+      },
+      {
+        "partno": "Box-3",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          1,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "brown"
+      },
+      {
+        "partno": "Box-4",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          1,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "cyan"
+      },
+      {
+        "partno": "Box-5",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          1,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      }
+    ]
+  },
+  "expected": {
+    "bins": [
+      {
+        "partno": "example3",
+        "width": 6.0,
+        "height": 1.0,
+        "depth": 5.0,
+        "max_weight": 100.0,
+        "corner": 0.0,
+        "put_type": 0,
+        "gravity": [
+          88.89,
+          11.11,
+          0.0,
+          0.0
+        ],
+        "items": [
+          {
+            "partno": "Box-1",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 1.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "yellow",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "Box-2",
+            "name": "test",
+            "typeof": "cube",
+            "width": 3.0,
+            "height": 1.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "pink",
+            "rotation_type": 0,
+            "position": [
+              2.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "Box-3",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 1.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "brown",
+            "rotation_type": 0,
+            "position": [
+              2.0,
+              0.0,
+              2.0
+            ]
+          }
+        ],
+        "unfitted_items": [
+          {
+            "partno": "Box-4",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 1.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "cyan",
+            "rotation_type": 5,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "Box-5",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 1.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 5,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    ],
+    "unfit_items": [
+      {
+        "partno": "Box-1",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 1.0,
+        "depth": 3.0,
+        "weight": 1.0,
+        "color": "yellow",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "Box-2",
+        "name": "test",
+        "typeof": "cube",
+        "width": 3.0,
+        "height": 1.0,
+        "depth": 2.0,
+        "weight": 1.0,
+        "color": "pink",
+        "rotation_type": 0,
+        "position": [
+          2.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "Box-3",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 1.0,
+        "depth": 3.0,
+        "weight": 1.0,
+        "color": "brown",
+        "rotation_type": 0,
+        "position": [
+          2.0,
+          0.0,
+          2.0
+        ]
+      },
+      {
+        "partno": "Box-4",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 1.0,
+        "depth": 3.0,
+        "weight": 1.0,
+        "color": "cyan",
+        "rotation_type": 5,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "Box-5",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 1.0,
+        "depth": 3.0,
+        "weight": 1.0,
+        "color": "olive",
+        "rotation_type": 5,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  }
+}

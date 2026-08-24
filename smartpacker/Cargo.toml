@@ -1,0 +1,32 @@
+[package]
+name = "smartpacker"
+description = "3D bin packing library, a Rust port of py3dbp (jerry800416/3dbinpacking)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+keywords = ["packing", "bin-packing", "3d", "logistics"]
+categories = ["algorithms"]
+
+[features]
+default = []
+serde = ["dep:serde"]
+plot = ["dep:plotters"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+plotters = { version = "0.3", optional = true, default-features = false, features = [
+    "bitmap_backend",
+    "bitmap_encoder",
+    "all_elements",
+    "all_series",
+    "ttf",
+] }
+
+[dev-dependencies]
+proptest = "1"
+serde_json = "1"
+serde = { version = "1", features = ["derive"] }

@@ -1,0 +1,225 @@
+{
+  "name": "edge_bigger_first_false",
+  "options": {
+    "bigger_first": false,
+    "distribute_items": true,
+    "fix_point": true,
+    "check_stable": true,
+    "support_surface_ratio": 0.75,
+    "number_of_decimals": 0,
+    "binding": []
+  },
+  "input": {
+    "bins": [
+      {
+        "partno": "example",
+        "whd": [
+          30,
+          10,
+          15
+        ],
+        "max_weight": 99,
+        "corner": 0,
+        "put_type": 1
+      }
+    ],
+    "items": [
+      {
+        "partno": "test1",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          9,
+          8,
+          7
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "red"
+      },
+      {
+        "partno": "test2",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          25,
+          1
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "blue"
+      },
+      {
+        "partno": "test3",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          13,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "gray"
+      },
+      {
+        "partno": "test4",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          7,
+          5,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "orange"
+      },
+      {
+        "partno": "test5",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          10,
+          5,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "lawngreen"
+      }
+    ]
+  },
+  "expected": {
+    "bins": [
+      {
+        "partno": "example",
+        "width": 30.0,
+        "height": 10.0,
+        "depth": 15.0,
+        "max_weight": 99.0,
+        "corner": 0.0,
+        "put_type": 1,
+        "gravity": [
+          45.29,
+          20.71,
+          15.43,
+          18.57
+        ],
+        "items": [
+          {
+            "partno": "test2",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 25.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "blue",
+            "rotation_type": 1,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test3",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 13.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "gray",
+            "rotation_type": 1,
+            "position": [
+              0.0,
+              4.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test4",
+            "name": "test",
+            "typeof": "cube",
+            "width": 7.0,
+            "height": 5.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "orange",
+            "rotation_type": 0,
+            "position": [
+              13.0,
+              4.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test5",
+            "name": "test",
+            "typeof": "cube",
+            "width": 10.0,
+            "height": 5.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "lawngreen",
+            "rotation_type": 1,
+            "position": [
+              25.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "unfitted_items": [
+          {
+            "partno": "test1",
+            "name": "test",
+            "typeof": "cube",
+            "width": 9.0,
+            "height": 8.0,
+            "depth": 7.0,
+            "weight": 1.0,
+            "color": "red",
+            "rotation_type": 5,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    ],
+    "unfit_items": [
+      {
+        "partno": "test1",
+        "name": "test",
+        "typeof": "cube",
+        "width": 9.0,
+        "height": 8.0,
+        "depth": 7.0,
+        "weight": 1.0,
+        "color": "red",
+        "rotation_type": 5,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  }
+}

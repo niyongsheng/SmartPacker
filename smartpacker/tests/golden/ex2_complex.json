@@ -1,0 +1,1064 @@
+{
+  "name": "ex2_complex",
+  "options": {
+    "bigger_first": true,
+    "distribute_items": true,
+    "fix_point": true,
+    "check_stable": true,
+    "support_surface_ratio": 0.75,
+    "number_of_decimals": 0,
+    "binding": []
+  },
+  "input": {
+    "bins": [
+      {
+        "partno": "example2",
+        "whd": [
+          30,
+          10,
+          15
+        ],
+        "max_weight": 99,
+        "corner": 0,
+        "put_type": 1
+      }
+    ],
+    "items": [
+      {
+        "partno": "test1",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          9,
+          8,
+          7
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "red"
+      },
+      {
+        "partno": "test2",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          25,
+          1
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "blue"
+      },
+      {
+        "partno": "test3",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          13,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "gray"
+      },
+      {
+        "partno": "test4",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          7,
+          5,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "orange"
+      },
+      {
+        "partno": "test5",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          10,
+          5,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "lawngreen"
+      },
+      {
+        "partno": "test6",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          6,
+          5,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "purple"
+      },
+      {
+        "partno": "test7",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          5,
+          2,
+          9
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "yellow"
+      },
+      {
+        "partno": "test8",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          10,
+          8,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "pink"
+      },
+      {
+        "partno": "test9",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          3,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "brown"
+      },
+      {
+        "partno": "test10",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          8,
+          4,
+          7
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "cyan"
+      },
+      {
+        "partno": "test11",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          5,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "test12",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          9,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "darkgreen"
+      },
+      {
+        "partno": "test13",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          7,
+          5,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "orange"
+      },
+      {
+        "partno": "test14",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          10,
+          2,
+          1
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "lawngreen"
+      },
+      {
+        "partno": "test15",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          3,
+          2,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "purple"
+      },
+      {
+        "partno": "test16",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          5,
+          7,
+          8
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "yellow"
+      },
+      {
+        "partno": "test17",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          8,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "white"
+      },
+      {
+        "partno": "test18",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          11,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "brown"
+      },
+      {
+        "partno": "test19",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          8,
+          3,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "cyan"
+      },
+      {
+        "partno": "test20",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          7,
+          4,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "test21",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          4,
+          11
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "darkgreen"
+      },
+      {
+        "partno": "test22",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          3,
+          4
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "orange"
+      },
+      {
+        "partno": "test23",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          10,
+          5,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "lawngreen"
+      },
+      {
+        "partno": "test24",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          7,
+          4,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "purple"
+      },
+      {
+        "partno": "test25",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          2,
+          10,
+          3
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "yellow"
+      },
+      {
+        "partno": "test26",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          3,
+          8,
+          1
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "pink"
+      },
+      {
+        "partno": "test27",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          7,
+          2,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "brown"
+      },
+      {
+        "partno": "test28",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          8,
+          9,
+          5
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "cyan"
+      },
+      {
+        "partno": "test29",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          4,
+          5,
+          10
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "test30",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          10,
+          10,
+          2
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "darkgreen"
+      }
+    ]
+  },
+  "expected": {
+    "bins": [
+      {
+        "partno": "example2",
+        "width": 30.0,
+        "height": 10.0,
+        "depth": 15.0,
+        "max_weight": 99.0,
+        "corner": 0.0,
+        "put_type": 1,
+        "gravity": [
+          30.7,
+          30.97,
+          24.1,
+          14.23
+        ],
+        "items": [
+          {
+            "partno": "test1",
+            "name": "test",
+            "typeof": "cube",
+            "width": 9.0,
+            "height": 8.0,
+            "depth": 7.0,
+            "weight": 1.0,
+            "color": "red",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test3",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 13.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "gray",
+            "rotation_type": 1,
+            "position": [
+              0.0,
+              8.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test7",
+            "name": "test",
+            "typeof": "cube",
+            "width": 5.0,
+            "height": 2.0,
+            "depth": 9.0,
+            "weight": 1.0,
+            "color": "yellow",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              8.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test16",
+            "name": "test",
+            "typeof": "cube",
+            "width": 5.0,
+            "height": 7.0,
+            "depth": 8.0,
+            "weight": 1.0,
+            "color": "yellow",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              7.0
+            ]
+          },
+          {
+            "partno": "test5",
+            "name": "test",
+            "typeof": "cube",
+            "width": 10.0,
+            "height": 5.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "lawngreen",
+            "rotation_type": 4,
+            "position": [
+              5.0,
+              0.0,
+              7.0
+            ]
+          },
+          {
+            "partno": "test21",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 4.0,
+            "depth": 11.0,
+            "weight": 1.0,
+            "color": "darkgreen",
+            "rotation_type": 3,
+            "position": [
+              5.0,
+              0.0,
+              12.0
+            ]
+          },
+          {
+            "partno": "test12",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 9.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "darkgreen",
+            "rotation_type": 0,
+            "position": [
+              5.0,
+              0.0,
+              12.0
+            ]
+          },
+          {
+            "partno": "test23",
+            "name": "test",
+            "typeof": "cube",
+            "width": 10.0,
+            "height": 5.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "lawngreen",
+            "rotation_type": 4,
+            "position": [
+              7.0,
+              0.0,
+              7.0
+            ]
+          },
+          {
+            "partno": "test8",
+            "name": "test",
+            "typeof": "cube",
+            "width": 10.0,
+            "height": 8.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "pink",
+            "rotation_type": 0,
+            "position": [
+              9.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test10",
+            "name": "test",
+            "typeof": "cube",
+            "width": 8.0,
+            "height": 4.0,
+            "depth": 7.0,
+            "weight": 1.0,
+            "color": "cyan",
+            "rotation_type": 0,
+            "position": [
+              9.0,
+              0.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test4",
+            "name": "test",
+            "typeof": "cube",
+            "width": 7.0,
+            "height": 5.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "orange",
+            "rotation_type": 0,
+            "position": [
+              9.0,
+              4.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test27",
+            "name": "test",
+            "typeof": "cube",
+            "width": 7.0,
+            "height": 2.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "brown",
+            "rotation_type": 0,
+            "position": [
+              9.0,
+              4.0,
+              9.0
+            ]
+          },
+          {
+            "partno": "test6",
+            "name": "test",
+            "typeof": "cube",
+            "width": 6.0,
+            "height": 5.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "purple",
+            "rotation_type": 2,
+            "position": [
+              9.0,
+              6.0,
+              9.0
+            ]
+          },
+          {
+            "partno": "test11",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 5.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 1,
+            "position": [
+              13.0,
+              8.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test20",
+            "name": "test",
+            "typeof": "cube",
+            "width": 7.0,
+            "height": 4.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              16.0,
+              5.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test29",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 5.0,
+            "depth": 10.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              17.0,
+              0.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test14",
+            "name": "test",
+            "typeof": "cube",
+            "width": 10.0,
+            "height": 2.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "lawngreen",
+            "rotation_type": 2,
+            "position": [
+              18.0,
+              9.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test28",
+            "name": "test",
+            "typeof": "cube",
+            "width": 8.0,
+            "height": 9.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "cyan",
+            "rotation_type": 0,
+            "position": [
+              19.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test19",
+            "name": "test",
+            "typeof": "cube",
+            "width": 8.0,
+            "height": 3.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "cyan",
+            "rotation_type": 2,
+            "position": [
+              21.0,
+              0.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test17",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 8.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "white",
+            "rotation_type": 4,
+            "position": [
+              23.0,
+              5.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test15",
+            "name": "test",
+            "typeof": "cube",
+            "width": 3.0,
+            "height": 2.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "purple",
+            "rotation_type": 0,
+            "position": [
+              24.0,
+              0.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test9",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 3.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "brown",
+            "rotation_type": 0,
+            "position": [
+              24.0,
+              2.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test22",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 3.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "orange",
+            "rotation_type": 0,
+            "position": [
+              25.0,
+              2.0,
+              5.0
+            ]
+          },
+          {
+            "partno": "test30",
+            "name": "test",
+            "typeof": "cube",
+            "width": 10.0,
+            "height": 10.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "darkgreen",
+            "rotation_type": 3,
+            "position": [
+              27.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test26",
+            "name": "test",
+            "typeof": "cube",
+            "width": 3.0,
+            "height": 8.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "pink",
+            "rotation_type": 3,
+            "position": [
+              29.0,
+              0.0,
+              0.0
+            ]
+          }
+        ],
+        "unfitted_items": [
+          {
+            "partno": "test13",
+            "name": "test",
+            "typeof": "cube",
+            "width": 7.0,
+            "height": 5.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "orange",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test24",
+            "name": "test",
+            "typeof": "cube",
+            "width": 7.0,
+            "height": 4.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "purple",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test18",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 11.0,
+            "depth": 5.0,
+            "weight": 1.0,
+            "color": "brown",
+            "rotation_type": 5,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test2",
+            "name": "test",
+            "typeof": "cube",
+            "width": 4.0,
+            "height": 25.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "blue",
+            "rotation_type": 5,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "test25",
+            "name": "test",
+            "typeof": "cube",
+            "width": 2.0,
+            "height": 10.0,
+            "depth": 3.0,
+            "weight": 1.0,
+            "color": "yellow",
+            "rotation_type": 5,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    ],
+    "unfit_items": [
+      {
+        "partno": "test13",
+        "name": "test",
+        "typeof": "cube",
+        "width": 7.0,
+        "height": 5.0,
+        "depth": 4.0,
+        "weight": 1.0,
+        "color": "orange",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "test24",
+        "name": "test",
+        "typeof": "cube",
+        "width": 7.0,
+        "height": 4.0,
+        "depth": 5.0,
+        "weight": 1.0,
+        "color": "purple",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "test18",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 11.0,
+        "depth": 5.0,
+        "weight": 1.0,
+        "color": "brown",
+        "rotation_type": 5,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "test2",
+        "name": "test",
+        "typeof": "cube",
+        "width": 4.0,
+        "height": 25.0,
+        "depth": 1.0,
+        "weight": 1.0,
+        "color": "blue",
+        "rotation_type": 5,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "test25",
+        "name": "test",
+        "typeof": "cube",
+        "width": 2.0,
+        "height": 10.0,
+        "depth": 3.0,
+        "weight": 1.0,
+        "color": "yellow",
+        "rotation_type": 5,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    ]
+  }
+}

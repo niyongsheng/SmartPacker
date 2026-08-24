@@ -1,0 +1,476 @@
+{
+  "name": "ex6_stable",
+  "options": {
+    "bigger_first": true,
+    "distribute_items": false,
+    "fix_point": true,
+    "check_stable": true,
+    "support_surface_ratio": 0.75,
+    "number_of_decimals": 0,
+    "binding": []
+  },
+  "input": {
+    "bins": [
+      {
+        "partno": "example6",
+        "whd": [
+          5,
+          4,
+          7
+        ],
+        "max_weight": 100,
+        "corner": 0,
+        "put_type": 0
+      }
+    ],
+    "items": [
+      {
+        "partno": "Box-1",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          5,
+          4,
+          1
+        ],
+        "weight": 1,
+        "level": 1,
+        "loadbear": 100,
+        "updown": true,
+        "color": "yellow"
+      },
+      {
+        "partno": "Box-2",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          1,
+          4
+        ],
+        "weight": 1,
+        "level": 2,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "Box-3",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          3,
+          4,
+          2
+        ],
+        "weight": 1,
+        "level": 3,
+        "loadbear": 100,
+        "updown": true,
+        "color": "pink"
+      },
+      {
+        "partno": "Box-4",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          1,
+          4
+        ],
+        "weight": 1,
+        "level": 4,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "Box-5",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          2,
+          1
+        ],
+        "weight": 1,
+        "level": 5,
+        "loadbear": 100,
+        "updown": true,
+        "color": "pink"
+      },
+      {
+        "partno": "Box-6",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          2,
+          1
+        ],
+        "weight": 1,
+        "level": 6,
+        "loadbear": 100,
+        "updown": true,
+        "color": "pink"
+      },
+      {
+        "partno": "Box-7",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          1,
+          4
+        ],
+        "weight": 1,
+        "level": 7,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "Box-8",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          1,
+          1,
+          4
+        ],
+        "weight": 1,
+        "level": 8,
+        "loadbear": 100,
+        "updown": true,
+        "color": "olive"
+      },
+      {
+        "partno": "Box-9",
+        "name": "test",
+        "typeof": "cube",
+        "whd": [
+          5,
+          4,
+          2
+        ],
+        "weight": 1,
+        "level": 9,
+        "loadbear": 100,
+        "updown": true,
+        "color": "brown"
+      }
+    ]
+  },
+  "expected": {
+    "bins": [
+      {
+        "partno": "example6",
+        "width": 5.0,
+        "height": 4.0,
+        "depth": 7.0,
+        "max_weight": 100.0,
+        "corner": 0.0,
+        "put_type": 0,
+        "gravity": [
+          37.78,
+          31.67,
+          16.3,
+          14.26
+        ],
+        "items": [
+          {
+            "partno": "Box-1",
+            "name": "test",
+            "typeof": "cube",
+            "width": 5.0,
+            "height": 4.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "yellow",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "partno": "Box-2",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 1.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-3",
+            "name": "test",
+            "typeof": "cube",
+            "width": 3.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "pink",
+            "rotation_type": 0,
+            "position": [
+              1.0,
+              0.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-4",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 1.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              4.0,
+              0.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-5",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 2.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "pink",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              1.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-6",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 2.0,
+            "depth": 1.0,
+            "weight": 1.0,
+            "color": "pink",
+            "rotation_type": 0,
+            "position": [
+              4.0,
+              1.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-7",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 1.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              3.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-8",
+            "name": "test",
+            "typeof": "cube",
+            "width": 1.0,
+            "height": 1.0,
+            "depth": 4.0,
+            "weight": 1.0,
+            "color": "olive",
+            "rotation_type": 0,
+            "position": [
+              4.0,
+              3.0,
+              1.0
+            ]
+          },
+          {
+            "partno": "Box-9",
+            "name": "test",
+            "typeof": "cube",
+            "width": 5.0,
+            "height": 4.0,
+            "depth": 2.0,
+            "weight": 1.0,
+            "color": "brown",
+            "rotation_type": 0,
+            "position": [
+              0.0,
+              0.0,
+              5.0
+            ]
+          }
+        ],
+        "unfitted_items": []
+      }
+    ],
+    "unfit_items": [
+      {
+        "partno": "Box-1",
+        "name": "test",
+        "typeof": "cube",
+        "width": 5.0,
+        "height": 4.0,
+        "depth": 1.0,
+        "weight": 1.0,
+        "color": "yellow",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "partno": "Box-2",
+        "name": "test",
+        "typeof": "cube",
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 4.0,
+        "weight": 1.0,
+        "color": "olive",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-3",
+        "name": "test",
+        "typeof": "cube",
+        "width": 3.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 1.0,
+        "color": "pink",
+        "rotation_type": 0,
+        "position": [
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-4",
+        "name": "test",
+        "typeof": "cube",
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 4.0,
+        "weight": 1.0,
+        "color": "olive",
+        "rotation_type": 0,
+        "position": [
+          4.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-5",
+        "name": "test",
+        "typeof": "cube",
+        "width": 1.0,
+        "height": 2.0,
+        "depth": 1.0,
+        "weight": 1.0,
+        "color": "pink",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-6",
+        "name": "test",
+        "typeof": "cube",
+        "width": 1.0,
+        "height": 2.0,
+        "depth": 1.0,
+        "weight": 1.0,
+        "color": "pink",
+        "rotation_type": 0,
+        "position": [
+          4.0,
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-7",
+        "name": "test",
+        "typeof": "cube",
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 4.0,
+        "weight": 1.0,
+        "color": "olive",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          3.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-8",
+        "name": "test",
+        "typeof": "cube",
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 4.0,
+        "weight": 1.0,
+        "color": "olive",
+        "rotation_type": 0,
+        "position": [
+          4.0,
+          3.0,
+          1.0
+        ]
+      },
+      {
+        "partno": "Box-9",
+        "name": "test",
+        "typeof": "cube",
+        "width": 5.0,
+        "height": 4.0,
+        "depth": 2.0,
+        "weight": 1.0,
+        "color": "brown",
+        "rotation_type": 0,
+        "position": [
+          0.0,
+          0.0,
+          5.0
+        ]
+      }
+    ]
+  }
+}
