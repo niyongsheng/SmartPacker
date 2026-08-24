@@ -1,0 +1,22 @@
+[package]
+name = "smartpacker-server"
+description = "HTTP packing service built on the smartpacker library (port of py3dbp api.py)"
+version.workspace = true
+edition.workspace = true
+rust-version = "1.75" # 显式覆盖 workspace：axum 0.8 的 MSRV；发布的库保持 1.70
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+smartpacker = { path = "../smartpacker" }
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tower-http = { version = "0.6", features = ["cors"] }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
