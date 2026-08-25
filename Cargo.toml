@@ -6,7 +6,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
-license = "MIT"
+license = "Apache-2.0"
 repository = "https://github.com/niyongsheng/SmartPacker"
 authors = ["Nico <niyongsheng@outlook.com>"]
 
