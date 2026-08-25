@@ -1,9 +1,10 @@
-//! SmartPacker: a 1:1 Rust port of the Python `py3dbp` 3D bin packing library
-//! (jerry800416/3dbinpacking).
+//! SmartPacker: 现代 3D 装箱打包库,由应用需求(best-load)驱动持续演进。
 //!
-//! Behavior fidelity with the Python implementation is the top priority of
-//! this crate. See the crate root README for the list of documented
-//! deviations (crash-fixes only).
+//! 关键语义:
+//! - 货物级稳定性:每件货物声明「允许悬空比例」`allowed_float_ratio`,
+//!   判定规则为底面支撑面积占比 ≥ 1−allowed_float_ratio,或底面四角全部落实;
+//! - 重力修正(fix_point)、绑定组、多箱分发(distribute)、圆柱体支持。
+//! - 坐标系:x 右 / y 上 / z 前,原点位于容器底部左下角。
 
 #![warn(missing_docs)]
 
@@ -44,6 +45,7 @@ mod serde_tests {
                 100,
                 true,
                 "red",
+                0.25,
             ));
         }
         p.pack(&PackOptions {
@@ -69,6 +71,7 @@ mod serde_tests {
             100,
             true,
             "blue",
+            0.25,
         );
         let v = serde_json::to_value(&it).expect("serialize item");
         assert_eq!(v["typeof"], "cylinder");

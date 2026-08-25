@@ -1,4 +1,4 @@
-//! 物品（Item）类型，对应 Python `py3dbp/main.py` 的 `Item` 类。
+//! 物品（Item）类型。
 
 use crate::auxiliary::quantize;
 use crate::constants::{ItemType, RotationType};
@@ -31,18 +31,27 @@ pub struct Item {
     pub updown: bool,
     /// 显示颜色。
     pub color: String,
+    /// 允许底面悬空的比例 0..=1：放置时要求底面支撑占比 >= 1 - 该值。
+    ///
+    /// 0 表示必须完全支撑（底面 100% 落实），1 表示不限制悬空。
+    /// 默认建议 0.25（等价支撑面比例阈值 0.75）。
+    pub allowed_float_ratio: f64,
     /// 旋转类型（0..5，见 [`RotationType`]）。
     pub rotation_type: u8,
     /// 当前位置（x, y, z）。
     pub position: [f64; 3],
     /// 数值量化保留的小数位数。
     pub number_of_decimals: u32,
+    /// 放置序号（每箱内按真实放置顺序 1 起；0 表示未放置）。
+    /// 在 push 进 `Bin.items` 时赋值，不受 `put_order` 空间重排影响。
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub step: usize,
 }
 
 impl Item {
     /// 构造一件物品。
     ///
-    /// 当 `type_of` 不是 [`ItemType::Cube`] 时，`updown` 会被强制为 `false`（对齐 Python 行为）。
+    /// 当 `type_of` 不是 [`ItemType::Cube`] 时，`updown` 会被强制为 `false`。
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         partno: impl Into<String>,
@@ -54,6 +63,7 @@ impl Item {
         loadbear: i32,
         updown: bool,
         color: impl Into<String>,
+        allowed_float_ratio: f64,
     ) -> Self {
         let updown = if type_of == ItemType::Cube {
             updown
@@ -72,9 +82,11 @@ impl Item {
             loadbear,
             updown,
             color: color.into(),
+            allowed_float_ratio,
             rotation_type: RotationType::RT_WHD,
             position: [0.0, 0.0, 0.0],
             number_of_decimals: 0,
+            step: 0,
         }
     }
 
@@ -146,7 +158,18 @@ mod tests {
     use super::*;
 
     fn cube(whd: [f64; 3], updown: bool) -> Item {
-        Item::new("p", "n", ItemType::Cube, whd, 1.0, 1, 100, updown, "red")
+        Item::new(
+            "p",
+            "n",
+            ItemType::Cube,
+            whd,
+            1.0,
+            1,
+            100,
+            updown,
+            "red",
+            0.25,
+        )
     }
 
     #[test]
@@ -161,6 +184,7 @@ mod tests {
             100,
             true,
             "red",
+            0.25,
         );
         assert!(!it.updown);
     }
@@ -213,6 +237,7 @@ mod tests {
             100,
             true,
             "red",
+            0.25,
         );
         it.format_numbers(0);
         assert_eq!(it.width, 590.0);

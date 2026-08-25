@@ -1,7 +1,7 @@
 //! 绑定组(binding):不同名称的物品轮询交错摆放。
 //!
 //! apple 与 orange 绑定为一组,a1↔o1、a2↔o2 轮询交替;组内长序盈余
-//! (若某名称数量多于组内其它名称)会进入 unfit(参考实现偏差 #1)。
+//! (若某名称数量多于组内其它名称)会进入 unfit。
 //! 运行:`cargo run --example binding`
 
 use smartpacker::constants::ItemType;
@@ -33,6 +33,7 @@ fn main() {
             100,
             true,
             color,
+            0.25,
         ));
     }
 
@@ -40,7 +41,6 @@ fn main() {
         bigger_first: true,
         fix_point: true,
         check_stable: true,
-        support_surface_ratio: 0.75,
         number_of_decimals: 0,
         binding: vec![vec!["apple".into(), "orange".into()]],
         ..PackOptions::default()

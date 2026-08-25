@@ -1,6 +1,6 @@
 [package]
 name = "smartpacker"
-description = "3D bin packing library, a Rust port of py3dbp (jerry800416/3dbinpacking)"
+description = "3D bin packing algorithm library."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

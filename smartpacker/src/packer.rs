@@ -1,13 +1,17 @@
-//! 箱体（Bin）与装箱器（Packer），对应 Python `py3dbp/main.py` 的 `Bin`/`Packer` 类。
+//! 箱体（Bin）与装箱器（Packer）。
 //!
-//! 行为保真细节见 crate 根 README 与 spec 附录（A-F）。本模块通过「arena + 索引」
-//! 方式复刻 Python 的对象活引用语义。
+//! 算法以应用需求（best-load）驱动：放置判定要求垂直底部支撑，
+//! 每件物品可用 `Item::allowed_float_ratio` 放宽允许的底面悬空占比。
+//! 本模块通过「arena + 索引」方式持有物品与箱子的所有权。
 
 use crate::auxiliary::{intersect, quantize};
 use crate::constants::{ItemType, RotationType};
 use crate::item::Item;
 use std::cmp::Ordering;
 use std::fmt;
+
+/// 几何比较容差。
+const EPS: f64 = 1e-9;
 
 /// 半开整数区间 `[st, ed)` 与 `[lo, hi)` 的交集长度。
 fn overlap_len(st: i64, ed: i64, lo: i64, hi: i64) -> i64 {
@@ -43,10 +47,8 @@ pub struct Bin {
     pub number_of_decimals: u32,
     /// 是否启用 fix_point 重力修正。
     pub fix_point: bool,
-    /// 是否启用稳定性检查。
+    /// 是否启用底部支撑检查（阈值由每件物品的 `allowed_float_ratio` 决定）。
     pub check_stable: bool,
-    /// 支撑面比例阈值。
-    pub support_surface_ratio: f64,
     /// 装箱顺序类型（1 一般 / 2 顶开 / 其他不排序）。
     pub put_type: i32,
     /// 四象限重量分布（百分比）。
@@ -76,7 +78,6 @@ impl Bin {
             number_of_decimals: 0,
             fix_point: false,
             check_stable: false,
-            support_surface_ratio: 0.0,
             put_type: 1,
             gravity: Vec::new(),
             fit_items: vec![[0.0, whd[0], 0.0, whd[1], 0.0, 0.0]],
@@ -139,7 +140,7 @@ impl Bin {
             }
             if fit {
                 if self.total_weight() + item.weight > self.max_weight {
-                    // 超重：不恢复 position（对齐 Python）
+                    // 超重：不恢复 position
                     return false;
                 }
                 if self.fix_point {
@@ -155,56 +156,22 @@ impl Bin {
                         z = self.check_depth([x, x + w, y, y + h, z, z + d]);
                     }
                     if self.check_stable {
-                        let item_area_lower = (w * h) as i64;
-                        // 底面积为 0 时跳过顶点检查（守卫性修复，见 spec 偏差 #7）
-                        if item_area_lower != 0 {
-                            let mut support_area_upper: i64 = 0;
-                            for fi in self.fit_items.iter() {
-                                if z == fi[5] {
-                                    support_area_upper += overlap_len(
-                                        x as i64,
-                                        (x + (w as i64) as f64) as i64,
-                                        fi[0] as i64,
-                                        fi[1] as i64,
-                                    ) * overlap_len(
-                                        y as i64,
-                                        (y + (h as i64) as f64) as i64,
-                                        fi[2] as i64,
-                                        fi[3] as i64,
-                                    );
-                                }
-                            }
-                            if (support_area_upper as f64) / (item_area_lower as f64)
-                                < self.support_surface_ratio
-                            {
-                                let four_vertices =
-                                    [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
-                                let mut c = [false; 4];
-                                for fi in self.fit_items.iter() {
-                                    if z == fi[5] {
-                                        for (jdx, v) in four_vertices.iter().enumerate() {
-                                            if fi[0] <= v[0]
-                                                && v[0] <= fi[1]
-                                                && fi[2] <= v[1]
-                                                && v[1] <= fi[3]
-                                            {
-                                                c[jdx] = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                if c.contains(&false) {
-                                    // 稳定性失败：恢复 position
-                                    item.position = valid_item_position;
-                                    return false;
-                                }
-                            }
+                        // 垂直底部支撑检查：比例主规则 + 底面四角兜底（见 bottom_support）。
+                        // 每件物品的允许悬空比例由 Item::allowed_float_ratio 决定。
+                        let (ratio, corners_ok) = self.bottom_support(x, w, z, d, y);
+                        let min_support = 1.0 - item.allowed_float_ratio;
+                        if ratio + EPS < min_support && !corners_ok {
+                            // 稳定性失败：恢复 position
+                            item.position = valid_item_position;
+                            return false;
                         }
                     }
                     self.fit_items.push([x, x + w, y, y + h, z, z + d]);
-                    // 注意：position 始终量化到 0 位小数（对齐 Python `set2Decimal` 默认值）
+                    // 位置量化到 0 位小数（应用数据本身为整数，保持整数输出）
                     item.position = [quantize(x, 0), quantize(y, 0), quantize(z, 0)];
                 }
+                // 真实放置序号：每箱内按时间序 1 起，push 时记录（不受 put_order 重排影响）
+                item.step = self.items.len() + 1;
                 self.items.push(item.clone());
             } else {
                 item.position = valid_item_position;
@@ -216,7 +183,45 @@ impl Bin {
         fit
     }
 
-    /// 修正物品在深度（z）方向的位置（对应 Python `checkDepth`）。
+    /// 计算物品底面（位于高度 `y0`、范围 `[x, x+w] × [z, z+d]`）的支撑情况。
+    ///
+    /// 返回 `(支撑面积占比, 底面四角是否全部落实)`。
+    /// 支撑来自 `fit_items` 中顶面（y1）恰等于 `y0` 的已占区间；
+    /// `y0 == 0`（箱底）视为全支撑；退化物品（零底面积）不做限制。
+    fn bottom_support(&self, x: f64, w: f64, z: f64, d: f64, y0: f64) -> (f64, bool) {
+        let bottom_area = w * d;
+        if bottom_area <= EPS {
+            return (1.0, true);
+        }
+        if y0 <= EPS {
+            return (1.0, true);
+        }
+        let mut support = 0.0;
+        let mut corners = [false; 4];
+        let cs = [[x, z], [x + w, z], [x, z + d], [x + w, z + d]];
+        for fi in &self.fit_items {
+            if (fi[3] - y0).abs() > EPS {
+                continue; // 顶面必须恰好托住底面
+            }
+            let x_ov = (x + w).min(fi[1]) - x.max(fi[0]);
+            let z_ov = (z + d).min(fi[5]) - z.max(fi[4]);
+            if x_ov > EPS && z_ov > EPS {
+                support += x_ov * z_ov;
+            }
+            for (k, c) in cs.iter().enumerate() {
+                if fi[0] - EPS <= c[0]
+                    && c[0] <= fi[1] + EPS
+                    && fi[4] - EPS <= c[1]
+                    && c[1] <= fi[5] + EPS
+                {
+                    corners[k] = true;
+                }
+            }
+        }
+        (support / bottom_area, corners.iter().all(|&c| c))
+    }
+
+    /// 修正物品在深度（z）方向的位置。
     fn check_depth(&self, unfix_point: [f64; 6]) -> f64 {
         let mut z: Vec<[f64; 2]> = vec![[0.0, 0.0], [self.depth, self.depth]];
         for j in &self.fit_items {
@@ -246,7 +251,7 @@ impl Bin {
         unfix_point[4]
     }
 
-    /// 修正物品在宽度（x）方向的位置（对应 Python `checkWidth`）。
+    /// 修正物品在宽度（x）方向的位置。
     fn check_width(&self, unfix_point: [f64; 6]) -> f64 {
         let mut x: Vec<[f64; 2]> = vec![[0.0, 0.0], [self.width, self.width]];
         for j in &self.fit_items {
@@ -276,7 +281,7 @@ impl Bin {
         unfix_point[0]
     }
 
-    /// 修正物品在高度（y）方向的位置（对应 Python `checkHeight`）。
+    /// 修正物品在高度（y）方向的位置（重力下落）。
     fn check_height(&self, unfix_point: [f64; 6]) -> f64 {
         let mut y: Vec<[f64; 2]> = vec![[0.0, 0.0], [self.height, self.height]];
         for j in &self.fit_items {
@@ -306,7 +311,7 @@ impl Bin {
         unfix_point[2]
     }
 
-    /// 生成 8 个角件（对应 Python `addCorner`）。
+    /// 生成 8 个角件。
     fn add_corner(&self) -> Vec<Item> {
         let mut list = Vec::new();
         if self.corner != 0.0 {
@@ -322,13 +327,14 @@ impl Bin {
                     0,
                     true,
                     "#000000".to_string(),
+                    1.0,
                 ));
             }
         }
         list
     }
 
-    /// 放置角件（对应 Python `putCorner`）。
+    /// 放置角件。
     fn put_corner(&mut self, info: usize, mut item: Item) {
         let x = quantize(self.width - self.corner, 0);
         let y = quantize(self.height - self.corner, 0);
@@ -344,6 +350,7 @@ impl Bin {
             [x, y, z],
         ];
         item.position = pos[info];
+        item.step = self.items.len() + 1;
         self.items.push(item);
         let c = pos[info];
         self.fit_items.push([
@@ -378,7 +385,7 @@ impl fmt::Display for Bin {
     }
 }
 
-/// `pack` 的配置项，默认值与 Python `Packer.pack` 一致。
+/// `pack` 的配置项。
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PackOptions {
@@ -388,10 +395,8 @@ pub struct PackOptions {
     pub distribute_items: bool,
     /// 是否启用 fix_point 重力修正。
     pub fix_point: bool,
-    /// 是否启用稳定性检查。
+    /// 是否启用底部支撑检查（阈值由每件物品的 `allowed_float_ratio` 决定）。
     pub check_stable: bool,
-    /// 支撑面比例阈值。
-    pub support_surface_ratio: f64,
     /// 绑定组（每组物品名）。
     pub binding: Vec<Vec<String>>,
     /// 数值量化小数位数。
@@ -405,7 +410,6 @@ impl Default for PackOptions {
             distribute_items: true,
             fix_point: true,
             check_stable: true,
-            support_surface_ratio: 0.75,
             binding: Vec::new(),
             number_of_decimals: 0,
         }
@@ -668,7 +672,6 @@ impl Packer {
     fn pack2_bin(bin: &mut Bin, item_id: usize, arena: &mut [Item], options: &PackOptions) -> bool {
         bin.fix_point = options.fix_point;
         bin.check_stable = options.check_stable;
-        bin.support_surface_ratio = options.support_surface_ratio;
 
         if bin.corner != 0.0 && bin.items.is_empty() {
             let corners = bin.add_corner();
@@ -838,7 +841,18 @@ mod tests {
     use super::*;
 
     fn cube(whd: [f64; 3], weight: f64) -> Item {
-        Item::new("p", "n", ItemType::Cube, whd, weight, 1, 100, true, "red")
+        Item::new(
+            "p",
+            "n",
+            ItemType::Cube,
+            whd,
+            weight,
+            1,
+            100,
+            true,
+            "red",
+            0.25,
+        )
     }
 
     #[test]
@@ -851,7 +865,6 @@ mod tests {
         assert_eq!(b.put_type, 1);
         assert_eq!(b.number_of_decimals, 0);
         assert!(!b.fix_point && !b.check_stable);
-        assert_eq!(b.support_surface_ratio, 0.0);
         assert!(b.items.is_empty() && b.unfitted_items.is_empty());
         // 初始占据：整个箱底平面。
         assert_eq!(b.fit_items, vec![[0.0, 5.0, 0.0, 4.0, 0.0, 0.0]]);
@@ -928,14 +941,116 @@ mod tests {
     }
 
     #[test]
-    fn pack_options_defaults_match_python() {
+    fn pack_options_defaults() {
         let o = PackOptions::default();
         assert!(!o.bigger_first);
         assert!(o.distribute_items);
         assert!(o.fix_point);
         assert!(o.check_stable);
-        assert_eq!(o.support_surface_ratio, 0.75);
         assert!(o.binding.is_empty());
         assert_eq!(o.number_of_decimals, 0);
+    }
+
+    /// 构造开启重力修正与稳定性检查的箱子。
+    fn stable_bin() -> Bin {
+        let mut b = Bin::new("box", [10.0, 10.0, 10.0], 100.0);
+        b.fix_point = true;
+        b.check_stable = true;
+        b
+    }
+
+    #[test]
+    fn stable_rejects_partial_support_when_not_allowed() {
+        // 底座 5×2×5 在箱底,上面放 10×2×10:支撑比 25/100 = 0.25。
+        let mut b = stable_bin();
+        let mut base = cube([5.0, 2.0, 5.0], 1.0);
+        assert!(b.put_item(&mut base, [0.0, 0.0, 0.0]));
+        // allowed=0:要求全支撑,四角也不齐 → 拒绝
+        let mut it = Item::new(
+            "p1",
+            "n",
+            ItemType::Cube,
+            [10.0, 2.0, 10.0],
+            1.0,
+            1,
+            100,
+            true,
+            "red",
+            0.0,
+        );
+        assert!(!b.put_item(&mut it, [0.0, 2.0, 0.0]));
+        assert_eq!(b.items.len(), 1);
+    }
+
+    #[test]
+    fn stable_accepts_when_within_allowed_float() {
+        let mut b = stable_bin();
+        let mut base = cube([5.0, 2.0, 5.0], 1.0);
+        assert!(b.put_item(&mut base, [0.0, 0.0, 0.0]));
+        // allowed=0.75:要求支撑比 >= 0.25,恰好压线 → 通过
+        let mut it = Item::new(
+            "p1",
+            "n",
+            ItemType::Cube,
+            [10.0, 2.0, 10.0],
+            1.0,
+            1,
+            100,
+            true,
+            "red",
+            0.75,
+        );
+        assert!(b.put_item(&mut it, [0.0, 2.0, 0.0]));
+        assert_eq!(b.items.len(), 2);
+    }
+
+    #[test]
+    fn stable_accepts_anything_when_fully_allowed() {
+        let mut b = stable_bin();
+        let mut base = cube([5.0, 2.0, 5.0], 1.0);
+        assert!(b.put_item(&mut base, [0.0, 0.0, 0.0]));
+        // allowed=1:不限制悬空 → 通过
+        let mut it = Item::new(
+            "p1",
+            "n",
+            ItemType::Cube,
+            [10.0, 2.0, 10.0],
+            1.0,
+            1,
+            100,
+            true,
+            "red",
+            1.0,
+        );
+        assert!(b.put_item(&mut it, [0.0, 2.0, 0.0]));
+        assert_eq!(b.items.len(), 2);
+    }
+
+    #[test]
+    fn stable_accepts_four_corner_support_fallback() {
+        // 直接验证底部支撑兜底规则:支撑面只覆盖板面四角(中间镂空),
+        // 支撑比不足但仍全部落实四角。
+        // 注意:不做 put_item 集成场景——fix_point 会把垫片吸附到贴墙空隙,
+        // 四角贴片的几何布置在真实装箱中由插入顺序动态确定。
+        let mut b = Bin::new("box", [10.0, 10.0, 10.0], 100.0);
+        // 模拟支撑层(板底 y=2,板面 x∈[0,10], z∈[0,10]):
+        // 4 张贴片各 5×2 分居四角,中间镂空。
+        // fit_items 记录 [x0,x1,y0,y1,z0,z1]。
+        b.fit_items.push([0.0, 5.0, 0.0, 2.0, 0.0, 2.0]);
+        b.fit_items.push([5.0, 10.0, 0.0, 2.0, 0.0, 2.0]);
+        b.fit_items.push([0.0, 5.0, 0.0, 2.0, 8.0, 10.0]);
+        b.fit_items.push([5.0, 10.0, 0.0, 2.0, 8.0, 10.0]);
+        let (ratio, corners_ok) = b.bottom_support(0.0, 10.0, 0.0, 10.0, 2.0);
+        assert!((ratio - 0.4).abs() < 1e-9, "ratio = {ratio:.4}");
+        assert!(corners_ok, "four corner patches must satisfy the fallback");
+
+        // 主规则不通过的样例:板面移到 z∈[3,7](四角都不落在贴片范围内),
+        // 支撑比为 0,兜底也不成立。
+        let (ratio2, corners2) = b.bottom_support(0.0, 10.0, 3.0, 4.0, 2.0);
+        assert!((ratio2 - 0.0).abs() < 1e-9, "ratio2 = {ratio2:.4}");
+        assert!(
+            !corners2,
+            "no support under z∈[3,7] => corners must be false"
+        );
     }
 }

@@ -1,7 +1,7 @@
-//! 稳定性校验两条规则的演示(ex5/ex6 场景)。
+//! 底部支撑检查两条规则的演示。
 //!
-//! 规则一(ex5):底部支撑面积占比低于 `support_surface_ratio` 的物品被标记 unfit;
-//! 规则二(ex6):底部四角任一悬空(无支撑)则移除该物品。
+//! 规则一:底面支撑面积占比低于 `1 - 允许悬空比例` 的物品被拒绝;
+//! 规则二:底面四角任一悬空(无支撑)时,四角全部落实可兜底放行。
 //! 运行:`cargo run --example stability`
 
 use smartpacker::constants::ItemType;
@@ -34,6 +34,7 @@ fn demo_rule1_support_surface() {
             100,
             true,
             color,
+            0.25,
         ));
     }
 
@@ -41,12 +42,11 @@ fn demo_rule1_support_surface() {
         bigger_first: true,
         fix_point: true,
         check_stable: true,
-        support_surface_ratio: 0.75,
         number_of_decimals: 0,
         ..PackOptions::default()
     });
 
-    println!("[rule 1: support surface ratio={:.2}]", 0.75);
+    println!("[rule 1: support ratio >= 1 - allowed_float (0.25)]");
     let bin = &p.bins[0];
     for it in &bin.items {
         println!(
@@ -92,6 +92,7 @@ fn demo_rule2_four_corner_support() {
             100,
             true,
             COLORS[i],
+            0.25,
         ));
     }
 
@@ -99,7 +100,6 @@ fn demo_rule2_four_corner_support() {
         bigger_first: true,
         fix_point: true,
         check_stable: true,
-        support_surface_ratio: 0.75,
         number_of_decimals: 0,
         ..PackOptions::default()
     });

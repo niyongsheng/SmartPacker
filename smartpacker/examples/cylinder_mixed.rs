@@ -51,7 +51,7 @@ fn main() {
     for (partno, ty, whd, _, _) in ITEMS {
         // 圆柱体由库强制 updown=false,Cube 透传 updown。
         p.add_item(Item::new(
-            partno, "test", ty, whd, 1.0, 1, 100, true, "gray",
+            partno, "test", ty, whd, 1.0, 1, 100, true, "gray", 0.25,
         ));
     }
 

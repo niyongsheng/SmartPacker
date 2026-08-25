@@ -1,8 +1,6 @@
 //! 常量定义：旋转类型、轴向、物品类型。
-//!
-//! 与 Python `py3dbp/constants.py` 一一对应。
 
-/// 旋转类型，取值与原库 `RotationType` 类一致（作为原始索引常量，非穷举枚举）。
+/// 旋转类型（作为原始索引常量，非穷举枚举）。
 ///
 /// 每种旋转类型对应不同的 WHD 置换方案，见 [`crate::Item::dimension`]。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

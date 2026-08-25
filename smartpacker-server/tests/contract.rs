@@ -1,6 +1,10 @@
-//! 服务契约测试:对齐参考 `api.py` 的路由与响应结构(API 文档 `api.md`)。
+//! 服务契约测试:路由与响应结构契约(沿用历史 `api.md` 的形状;算法行为
+//! 以应用需求为准,不再对齐参考实现)。
 //!
 //! 用 tower `oneshot` 直接驱动 `app()` 路由器,无需真实端口。
+//!
+//! 新增契约:物品 JSON 可选 `allowed_float_ratio`(缺省 0.25),响应 fitItem
+//! 携带 `allowedFloatRatio` 原样回传。
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
@@ -224,6 +228,14 @@ async fn cal_packing_40ft_contract() {
             pn.starts_with(&format!("{nm}-")),
             "{pn} must start with {nm}-"
         );
+        // 允许悬空比例语义化回传:0.25 为未显式指定时的缺省值。
+        let afr = it["allowedFloatRatio"]
+            .as_f64()
+            .unwrap_or_else(|| panic!("fitItem must carry allowedFloatRatio: {it}"));
+        assert!(
+            (0.0..=1.0).contains(&afr),
+            "allowedFloatRatio must be in 0..=1, got {afr}"
+        );
     }
 
     // unfitItem 结构同 fitItem。
@@ -233,4 +245,41 @@ async fn cal_packing_40ft_contract() {
     }
 
     // 普通物品精确位置不做断言(算法输出,非契约)。
+}
+
+/// `allowed_float_ratio` 契约:可选字段传入后按件回传;
+/// 未显式指定时缺省 0.25;越界值收敛到 0..=1。
+#[tokio::test]
+async fn cal_packing_allowed_float_ratio_roundtrip() {
+    let body = r#"{
+        "box": [{"name": "b", "WHD": [20, 20, 20], "weight": 1000, "openTop": [1], "coner": 0}],
+        "item": [
+            {"name": "strict", "WHD": [5, 5, 5], "count": 1, "updown": 1, "type": 1, "level": 1, "loadbear": 10, "weight": 1, "color": 1, "allowed_float_ratio": 0.0},
+            {"name": "loose", "WHD": [5, 5, 5], "count": 1, "updown": 1, "type": 1, "level": 1, "loadbear": 10, "weight": 1, "color": 2, "allowed_float_ratio": 1.0},
+            {"name": "defaulted", "WHD": [30, 30, 30], "count": 1, "updown": 1, "type": 1, "level": 1, "loadbear": 10, "weight": 1, "color": 3},
+            {"name": "clamped", "WHD": [5, 5, 5], "count": 1, "updown": 1, "type": 1, "level": 1, "loadbear": 10, "weight": 1, "color": 4, "allowed_float_ratio": 7.0}
+        ],
+        "binding": []
+    }"#;
+    let (status, v) = post_json(&app(), "/calPacking", body).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(v["Success"], json!(true), "should succeed: {v}");
+
+    let find = |name: &str| {
+        v["data"]["fitItem"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .chain(v["data"]["unfitItem"].as_array().unwrap().iter())
+            .find(|f| f["partNumber"] == format!("{name}-1"))
+            .unwrap_or_else(|| panic!("item {name}-1 not found in response"))
+            .clone()
+    };
+
+    assert_eq!(find("strict")["allowedFloatRatio"], json!(0.0));
+    assert_eq!(find("loose")["allowedFloatRatio"], json!(1.0));
+    // 未指定:缺省 0.25
+    assert_eq!(find("defaulted")["allowedFloatRatio"], json!(0.25));
+    // 越界(7.0):构造输入时已 clamp 0..=1 → 1.0
+    assert_eq!(find("clamped")["allowedFloatRatio"], json!(1.0));
 }

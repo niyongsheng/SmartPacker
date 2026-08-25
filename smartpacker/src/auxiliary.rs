@@ -1,4 +1,4 @@
-//! 数值与几何辅助函数，与 Python `py3dbp/auxiliary_methods.py` 对齐。
+//! 数值与几何辅助函数。
 
 use crate::constants::Axis;
 use crate::item::Item;
@@ -65,7 +65,18 @@ mod tests {
     use crate::constants::ItemType;
 
     fn item_at(pos: [f64; 3], whd: [f64; 3]) -> Item {
-        let mut it = Item::new("p", "n", ItemType::Cube, whd, 1.0, 1, 100, true, "red");
+        let mut it = Item::new(
+            "p",
+            "n",
+            ItemType::Cube,
+            whd,
+            1.0,
+            1,
+            100,
+            true,
+            "red",
+            0.25,
+        );
         it.position = pos;
         it
     }

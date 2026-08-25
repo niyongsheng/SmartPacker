@@ -1,15 +1,18 @@
-//! 属性不变式与确定性测试（对应 spec R14(2)(3)(4)）。
+//! 属性不变式与确定性测试。
 //!
-//! - proptest 随机生成箱体/物品，验证放置结果满足不越界、
-//!   总重不超限、distribute 物品守恒、updown=false 旋转受限。
-//!   （注：py3dbp 在 fix_point 下不保证两两不重叠，故不做该断言）
-//! - 确定性：同输入两次运行输出完全一致。
-//! - R7/R8 修复项：空绑定组跳过、零重量 gravity 不崩溃。
+//! - proptest 随机生成箱体/物品,验证放置结果满足不越界、总重不超限、
+//!   支撑规则(底面支撑比例 ≥ 1−allowed_float_ratio,或底面四角全部落实)、
+//!   distribute 物品守恒、updown=false 旋转受限。
+//! - 确定性:同输入两次运行输出完全一致。
+//! - 修复项:空绑定组跳过、零重量 gravity 不崩溃。
 
 use proptest::prelude::*;
 use smartpacker::{Bin, Item, ItemType, PackOptions, Packer, RotationType};
 
-fn cube(partno: &str, whd: [f64; 3], weight: f64, updown: bool) -> Item {
+const EPS: f64 = 1e-9;
+const FLOAT_RATIOS: [f64; 5] = [0.0, 0.25, 0.5, 0.75, 1.0];
+
+fn cube(partno: &str, whd: [f64; 3], weight: f64, updown: bool, allowed: f64) -> Item {
     Item::new(
         partno,
         "test",
@@ -20,17 +23,18 @@ fn cube(partno: &str, whd: [f64; 3], weight: f64, updown: bool) -> Item {
         100,
         updown,
         "red",
+        allowed,
     )
 }
 
-/// 检查单个箱子的几何/重量不变式。
+/// 检查单个箱子的几何/重量/支撑不变式。
 fn check_bin_invariants(bin: &Bin, ctx: &str) {
     // 不越界
     for item in &bin.items {
         let d = item.dimension();
         for ax in 0..3 {
             assert!(
-                item.position[ax] + d[ax] <= [bin.width, bin.height, bin.depth][ax] + 1e-9,
+                item.position[ax] + d[ax] <= [bin.width, bin.height, bin.depth][ax] + EPS,
                 "{ctx}: item {} axis {} out of bounds (pos {:?} + dim {:?} > {})",
                 item.partno,
                 ax,
@@ -39,7 +43,7 @@ fn check_bin_invariants(bin: &Bin, ctx: &str) {
                 [bin.width, bin.height, bin.depth][ax]
             );
             assert!(
-                item.position[ax] >= -1e-9,
+                item.position[ax] >= -EPS,
                 "{ctx}: item {} axis {} negative",
                 item.partno,
                 ax
@@ -57,20 +61,86 @@ fn check_bin_invariants(bin: &Bin, ctx: &str) {
         }
     }
 
-    // 注意：不对「两两不重叠」做断言。py3dbp（及本移植）在 fix_point 下并不保证
-    // 不重叠——putItem 的相交检查发生在重力修正之前，修正下落后的最终位置可能与
-    // 已放置物品在几何上重叠（Python 同样输出重叠结果，属启发式固有行为，非本
-    // 库的移植偏差）。
-    //
-    // 因此这里只保留真正成立的不变式：不越界、旋转受限、总重不超限。
+    // 支撑规则:与算法 put_item 的判定语义一致——
+    // 支持「y1 == y0 托底」的 x/z 投影重叠面积占比 ≥ 1−allowed_float_ratio,
+    // 或底面四角全部落实(兜底)。
+    for item in &bin.items {
+        let [w, _h, d] = item.dimension();
+        let [x, y, z] = item.position;
+        let bottom_area = w * d;
+        if bottom_area <= EPS {
+            continue; // 零底面积退化物品
+        }
+
+        let mut support = 0.0;
+        if y <= EPS {
+            support = bottom_area; // 落箱底:全支撑
+        } else {
+            for other in &bin.items {
+                if std::ptr::eq(item, other) {
+                    continue;
+                }
+                let [ow, _, od] = other.dimension();
+                let [ox, oy, oz] = other.position;
+                let top = oy + other.dimension()[1];
+                if (top - y).abs() > EPS {
+                    continue; // 顶面必须恰好托住底面
+                }
+                let x_ov = (x + w).min(ox + ow) - x.max(ox);
+                let z_ov = (z + d).min(oz + od) - z.max(oz);
+                if x_ov > EPS && z_ov > EPS {
+                    support += x_ov * z_ov;
+                }
+            }
+        }
+        let ratio = support / bottom_area;
+        let min_support = 1.0 - item.allowed_float_ratio;
+
+        let in_support_rect = |cx: f64, cz: f64| -> bool {
+            bin.items.iter().any(|other| {
+                if std::ptr::eq(item, other) {
+                    return false;
+                }
+                let [ow, _, od] = other.dimension();
+                let [ox, oy, oz] = other.position;
+                let top = oy + other.dimension()[1];
+                (top - y).abs() <= EPS
+                    && cx >= ox - EPS
+                    && cx <= ox + ow + EPS
+                    && cz >= oz - EPS
+                    && cz <= oz + od + EPS
+            })
+        };
+        let four_corners = in_support_rect(x, z)
+            && in_support_rect(x + w, z)
+            && in_support_rect(x, z + d)
+            && in_support_rect(x + w, z + d);
+
+        assert!(
+            ratio + EPS >= min_support || four_corners,
+            "{ctx}: item {} violates support rule pos=({x},{y},{z}) dims=({w}..,) ratio={ratio:.4} min={min_support:.4} corners={four_corners}",
+            item.partno
+        );
+    }
+
+    // 注意:不对「两两不重叠」做断言。启发式在 fix_point 下并不保证不重叠——
+    // putItem 的相交检查发生在重力修正之前,修正下落后的最终位置可能与已放置
+    // 物品在几何上重叠,属启发式固有行为。
 
     // 总重不超限
     let total: f64 = bin.items.iter().map(|i| i.weight).sum();
     assert!(
-        total <= bin.max_weight + 1e-9,
+        total <= bin.max_weight + EPS,
         "{ctx}: total weight {total} exceeds max_weight {}",
         bin.max_weight
     );
+
+    // 放置序号不变量:每箱内 step 恰为 1..=len 的排列(真实放置顺序,不受 put_order 重排影响)
+    let mut steps: Vec<usize> = bin.items.iter().map(|i| i.step).collect();
+    steps.sort_unstable();
+    for (idx, &s) in steps.iter().enumerate() {
+        assert_eq!(s, idx + 1, "{ctx}: steps permutation broken: {steps:?}");
+    }
 }
 
 proptest! {
@@ -80,7 +150,8 @@ proptest! {
         bh in 1u32..=60,
         bd in 1u32..=60,
         items in prop::collection::vec(
-            (1u32..=30, 1u32..=30, 1u32..=30, 1u32..=100, any::<bool>()),
+            // (w, h, d, weight, updown, 允许悬空档位)
+            (1u32..=30, 1u32..=30, 1u32..=30, 1u32..=100, any::<bool>(), 0usize..5),
             1..=20
         ),
     ) {
@@ -88,12 +159,13 @@ proptest! {
         let mut bin = Bin::new("b", [bw as f64, bh as f64, bd as f64], 10_000.0);
         bin.put_type = 1;
         packer.add_bin(bin);
-        for (i, (w, h, d, weight, updown)) in items.into_iter().enumerate() {
+        for (i, (w, h, d, weight, updown, r)) in items.into_iter().enumerate() {
             packer.add_item(cube(
                 &format!("item{i}"),
                 [w as f64, h as f64, d as f64],
                 weight as f64,
                 updown,
+                FLOAT_RATIOS[r],
             ));
         }
         packer.pack(&PackOptions {
@@ -101,14 +173,13 @@ proptest! {
             distribute_items: true,
             fix_point: true,
             check_stable: true,
-            support_surface_ratio: 0.75,
             binding: vec![],
             number_of_decimals: 0,
         });
 
         check_bin_invariants(&packer.bins[0], "random");
 
-        // distribute_items=true 且单箱：物品守恒（每件恰出现于箱内或 unfit）
+        // distribute_items=true 且单箱:物品守恒(每件恰出现于箱内或 unfit)
         let mut seen = std::collections::HashSet::new();
         for item in &packer.bins[0].items {
             assert!(seen.insert(item.partno.clone()), "duplicate fitted {}", item.partno);
@@ -119,7 +190,7 @@ proptest! {
     }
 }
 
-/// 确定性：同一输入两次运行，bins/items/unfit 完全一致。
+/// 确定性:同一输入两次运行,bins/items/unfit 完全一致。
 #[test]
 fn deterministic_same_input_twice() {
     let build = || {
@@ -133,7 +204,7 @@ fn deterministic_same_input_twice() {
                 1 => [3.0, 6.0, 2.0],
                 _ => [4.0, 2.0, 5.0],
             };
-            packer.add_item(cube(&format!("p{i}"), whd, 10.0, i % 2 == 0));
+            packer.add_item(cube(&format!("p{i}"), whd, 10.0, i % 2 == 0, 0.25));
         }
         packer
     };
@@ -143,7 +214,6 @@ fn deterministic_same_input_twice() {
         distribute_items: false,
         fix_point: true,
         check_stable: true,
-        support_surface_ratio: 0.75,
         binding: vec![],
         number_of_decimals: 0,
     };
@@ -178,31 +248,30 @@ fn deterministic_same_input_twice() {
     assert_eq!(unfit_a, unfit_b);
 }
 
-/// R7 修复：空绑定组（引用不存在的物品名）应被跳过，其余物品正常装箱。
+/// 修复:空绑定组(引用不存在的物品名)应被跳过,其余物品正常装箱。
 #[test]
 fn empty_binding_group_is_skipped() {
     let mut packer = Packer::new();
     let mut bin = Bin::new("b", [20.0, 20.0, 20.0], 1000.0);
     bin.put_type = 1;
     packer.add_bin(bin);
-    packer.add_item(cube("a", [5.0, 5.0, 5.0], 10.0, true));
-    packer.add_item(cube("b", [5.0, 5.0, 5.0], 10.0, true));
+    packer.add_item(cube("a", [5.0, 5.0, 5.0], 10.0, true, 0.25));
+    packer.add_item(cube("b", [5.0, 5.0, 5.0], 10.0, true, 0.25));
 
     packer.pack(&PackOptions {
         bigger_first: true,
         distribute_items: false,
         fix_point: true,
         check_stable: true,
-        support_surface_ratio: 0.75,
         binding: vec![vec!["nonexistent".to_string()]],
         number_of_decimals: 0,
     });
 
-    // 空组被跳过：两件物品都应被装入（而非因 min_c=0 被全部丢弃）。
+    // 空组被跳过:两件物品都应被装入(而非因 min_c=0 被全部丢弃)。
     assert_eq!(packer.bins[0].items.len(), 2);
 }
 
-/// R8 修复：空箱（总重为 0）时 gravity 返回 [0,0,0,0] 且不崩溃。
+/// 修复:空箱(总重为 0)时 gravity 返回 [0,0,0,0] 且不崩溃。
 #[test]
 fn zero_weight_gravity_does_not_crash() {
     let mut packer = Packer::new();

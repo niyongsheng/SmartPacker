@@ -1,6 +1,6 @@
 [package]
 name = "smartpacker-server"
-description = "HTTP packing service built on the smartpacker library (port of py3dbp api.py)"
+description = "HTTP packing service built on the smartpacker library (best-load application contract)"
 version.workspace = true
 edition.workspace = true
 rust-version = "1.75" # 显式覆盖 workspace：axum 0.8 的 MSRV；发布的库保持 1.70

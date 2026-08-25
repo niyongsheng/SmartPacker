@@ -1,10 +1,13 @@
-//! smartpacker-server:基于 `smartpacker` 装箱库的 HTTP 服务,移植自参考实现
-//! `3D-bin-packing/api.py`。
+//! smartpacker-server:基于 `smartpacker` 装箱库的 HTTP 服务(应用需求驱动,
+//! 不再保证与参考实现 api.py 行为兼容)。
 //!
 //! 路由:
 //! - `GET /` — 服务横幅
 //! - `POST /getAllData` — 返回内嵌示例数据(含 `Success: true`);`GET` 被拒绝
 //! - `POST /calPacking` — 对提交的 box/item/binding 执行装箱并返回结果;`GET` 被拒绝
+//!
+//! 物品 JSON 支持可选字段 `allowed_float_ratio`(0..=1,缺省 0.25):该货物允许
+//! 底面悬空的面积占比;算法按件校验底部支撑(支撑比 ≥ 1−allowed,或底面四角落实)。
 //!
 //! 所有路由均启用 permissive CORS。监听地址由 `SMARTPACKER_ADDR` 覆盖,默认
 //! `0.0.0.0:5050`。
@@ -59,7 +62,7 @@ async fn cal_packing_get() -> Json<Value> {
 
 /// `POST /calPacking`:执行装箱。
 ///
-/// 错误映射顺序与 api.py 一致:
+/// 错误映射顺序(保留历史兼容):
 /// 1. 请求体非法 JSON → `input data err`
 /// 2. 缺 box/item/binding 任一 → `box or item not in input data`
 /// 3. 构造箱/物品失败 → `input data err`
@@ -192,6 +195,8 @@ fn make_dict_item(item: &Item) -> Value {
         "rotationType": item.rotation_type,
         "WHD": [int_of(whd[0]), int_of(whd[1]), int_of(whd[2])],
         "weight": int_of(item.weight),
+        "step": item.step,
+        "allowedFloatRatio": item.allowed_float_ratio,
     })
 }
 
@@ -235,6 +240,12 @@ fn build_input(v: &Value) -> Result<(Packer, Vec<Vec<String>>), ()> {
             .ok_or(())?;
         let weight = it.get("weight").and_then(Value::as_f64).ok_or(())?;
         let color = as_i64(it.get("color").ok_or(())?).ok_or(())?;
+        // 可选:允许悬空比例,缺省 0.25;越界值收敛到 0..=1。
+        let allowed_float_ratio = it
+            .get("allowed_float_ratio")
+            .and_then(Value::as_f64)
+            .unwrap_or(0.25)
+            .clamp(0.0, 1.0);
 
         let type_of = if kind == 2 {
             ItemType::Cylinder
@@ -253,6 +264,7 @@ fn build_input(v: &Value) -> Result<(Packer, Vec<Vec<String>>), ()> {
                 loadbear,
                 updown,
                 color_name(color).to_string(),
+                allowed_float_ratio,
             ));
         }
     }

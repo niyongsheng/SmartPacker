@@ -39,6 +39,7 @@ fn main() {
             100,
             true,
             "red",
+            0.25,
         ));
     }
     p.pack(&PackOptions::default());
