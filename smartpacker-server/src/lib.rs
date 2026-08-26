@@ -12,6 +12,8 @@
 //! 所有路由均启用 permissive CORS。监听地址由 `SMARTPACKER_ADDR` 覆盖,默认
 //! `0.0.0.0:5050`。
 
+use std::sync::OnceLock;
+
 use axum::response::Html;
 use axum::routing::get;
 use axum::{Json, Router};
@@ -24,6 +26,9 @@ use serde_json::{json, Value};
 
 /// 内嵌的示例数据(`widadvance.json`,与 api.py 启动时读取的文件一致)。
 const WID_ADVANCE: &str = include_str!("../data/widadvance.json");
+
+/// 首次请求时解析一次并缓存,避免每次请求重复反序列化同一份静态 JSON。
+static WID_ADVANCE_DATA: OnceLock<Value> = OnceLock::new();
 
 /// 组装应用路由。
 pub fn app() -> Router {
@@ -50,7 +55,9 @@ async fn get_all_data_get() -> Json<Value> {
 
 /// `POST /getAllData`:返回内嵌示例数据并标记成功。
 async fn get_all_data_post() -> Json<Value> {
-    let mut data: Value = serde_json::from_str(WID_ADVANCE).expect("widadvance.json is valid JSON");
+    let mut data = WID_ADVANCE_DATA
+        .get_or_init(|| serde_json::from_str(WID_ADVANCE).expect("widadvance.json is valid JSON"))
+        .clone();
     data["Success"] = Value::Bool(true);
     Json(data)
 }
