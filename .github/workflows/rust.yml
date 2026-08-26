@@ -27,6 +27,8 @@ jobs:
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+      - name: 安装系统依赖（plot 特性的 fontconfig 后端）
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev
       - name: 格式化检查
         run: cargo fmt --check
       - name: 静态检查
