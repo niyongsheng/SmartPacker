@@ -72,3 +72,24 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: cargo publish -p smartpacker
+
+  # GitHub Release(分发渠道是 crates.io,Release 仅存档与公告;幂等,已存在则跳过)
+  release:
+    name: 创建 GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: 创建 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="$(cargo metadata --format-version 1 --no-deps \
+            | jq -r '.packages[] | select(.name == "smartpacker") | .version')"
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "Release v${VERSION} 已存在,跳过"
+          else
+            gh release create "v${VERSION}" --title "smartpacker v${VERSION}" --generate-notes
+          fi
