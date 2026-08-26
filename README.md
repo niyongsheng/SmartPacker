@@ -3,19 +3,23 @@
 ![logo](./logo.png)
 ![Pages](https://img.shields.io/badge/r0.2.0-beta-brightgreen.svg?style=flat-square)
 
-3D 装箱（bin packing）算法库——用于物流柜体/集装箱装载优化。
+A 3D packing algorithm library for load optimization of logistics cabinets and containers.
 
-## 特性
+## Application
 
-- **垂直底部支撑** — 放置判定要求支撑物顶面恰托住底面（`y1 == y0`），而非任意投影重叠。
-- **货物级「允许悬空比例」** — 每件物品可声明 `Item::allowed_float_ratio`（0..=1，默认建议 0.25）：
-  底面支撑占比 ≥ `1 − allowed_float_ratio` 即合法，底面四角全部落实为兜底；`0` 必须完全支撑，`1` 不限悬空。
-- **重力修正与贴靠** — `fix_point` 三轴 gap-snapping（靠地/靠壁）；`bigger_first`、`distribute_items`（多箱分发）、binding 绑定组。
-- **数值稳定** — `f64` + ROUND_HALF_EVEN 舍入，EPS(1e-9) 容差；核心库零外部运行时依赖（仅 `std`），
-  特性可选 `serde` / `plot`（PNG 渲染）。
-- **门禁测试** — `tests/no_floating.rs` 对装箱产出断言支撑规则；`cargo run --example floating_check` 人工批量扫描。
+<img alt="BestLoad" src="https://github.com/user-attachments/assets/238d8f44-4011-4f69-85ec-ba6e8c44973b" width="100" />[优载 BestLoad](https://github.com/niyongsheng/best-load)
 
-## 快速上手
+## Features
+
+- **Vertical bottom support** — placement is accepted only when the support's top face exactly holds the item's bottom face (`y1 == y0`), not on arbitrary projection overlap.
+- **Per-item "allowed float ratio"** — each item may declare `Item::allowed_float_ratio` (0..=1, 0.25 recommended by default):
+  the bottom face is legal when the support ratio ≥ `1 − allowed_float_ratio`, with all four bottom corners landed as the last resort; `0` requires full support, `1` allows unlimited overhang.
+- **Gravity correction and snapping** — `fix_point` gap-snapping on all three axes (to floor/walls); `bigger_first`, `distribute_items` (multi-bin distribution), `binding` (binding groups).
+- **Numerical stability** — `f64` with ROUND_HALF_EVEN rounding, EPS (1e-9) tolerance; zero external runtime dependencies in the core library (only `std`),
+  with optional `serde` / `plot` (PNG rendering) features.
+- **Quality-gate tests** — `tests/no_floating.rs` asserts the support rules on packing output; `cargo run --example floating_check` for manual batch scanning.
+
+## Quick Start
 
 ```bash
 cargo add smartpacker
@@ -38,42 +42,44 @@ fn main() {
 }
 ```
 
-更多可运行示例：
+More runnable examples:
 
 ```bash
-cargo run --example readme_simple   # 30×10×15 箱 + 5 物品
-cargo run --example cylinder_mixed  # 圆柱 + 立方混合
-cargo run --example multi_bin       # 双箱 + distribute_items
-cargo run --example stability       # 底部支撑两规则（允许悬空比例 / 四角支撑）
-cargo run --example binding         # 绑定组
-cargo run --example plot --features plot        # 渲染装箱结果 PNG
+cargo run --example readme_simple   # 30×10×15 bin + 5 items
+cargo run --example cylinder_mixed  # cylinder + cube mixed
+cargo run --example multi_bin       # two bins + distribute_items
+cargo run --example stability       # two bottom-support rules (float ratio / four-corner support)
+cargo run --example binding         # binding groups
+cargo run --example plot --features plot        # render packing result to PNG
 ```
 
-## 技术文档
+## Technical Documentation
 
-算法内部实现（排序链、`put_item` 启发式、重力修正、底部支撑、绑定组、重心分布）、数据模型、
-数值语义与测试策略的完整说明见 **[`smartpacker/doc.md`](./smartpacker/doc.md)**。
+The algorithm internals (sorting chain, `put_item` heuristics, gravity correction, bottom support, binding groups, center-of-mass distribution),
+data model, numerical semantics and test strategy are fully documented in **[`smartpacker/doc.md`](./smartpacker/doc.md)**.
 
 ## smartpacker-server
 
-HTTP 装箱服务（best-load 应用的服务端契约配套），默认监听 `0.0.0.0:5050`：
+HTTP packing service (the server-side contract companion for the best-load app), listening on `0.0.0.0:5050` by default:
 
 ```bash
 SMARTPACKER_ADDR=127.0.0.1:5050 cargo run -p smartpacker-server
 ```
 
-| 路由 | 方法 | 行为 |
+| Route | Method | Behavior |
 |---|---|---|
-| `/` | GET | 服务横幅 |
-| `/getAllData` | POST | 返回内嵌示例数据 + `Success: true` |
-| `/calPacking` | POST | 入参 `{box, item, binding}`，返回 `data.{box, fitItem, unfitItem}` |
+| `/` | GET | Service banner |
+| `/getAllData` | POST | Returns the built-in sample data + `Success: true` |
+| `/calPacking` | POST | Input `{box, item, binding}`, returns `data.{box, fitItem, unfitItem}` |
 
-POST 路由的 GET 请求被拒绝，错误统一为 `{"Success":false,"Reason":...}`。
-
-入参约定见 [`smartpacker-server/src/lib.rs`](./smartpacker-server/src/lib.rs) 模块文档：
-`box[0].openTop[0]` 用作 `put_type`、`item` 按 `count` 展开、`type==2` 视为圆柱、
-每件 `item` 可带可选 `allowed_float_ratio`（缺省 0.25）等。
+Input conventions are documented in the module docs of [`smartpacker-server/src/lib.rs`](./smartpacker-server/src/lib.rs):
+`box[0].openTop[0]` is used as `put_type`, items are expanded by `count`, `type==2` is treated as a cylinder,
+and each `item` may carry an optional `allowed_float_ratio` (default 0.25).
 
 ## Contact Me
 
 * E-mail: niyongsheng@Outlook.com
+
+## License
+
+[Apache-2.0](LICENSE)

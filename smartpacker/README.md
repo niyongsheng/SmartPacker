@@ -1,6 +1,6 @@
 # smartpacker
 
-Zero-dependency 3D bin packing algorithm library for logistics container/box loading optimization.
+3D bin packing algorithm library for logistics container/box loading optimization.
 
 ## Features
 
