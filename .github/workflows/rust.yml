@@ -60,8 +60,11 @@ jobs:
               exit 1
             fi
           fi
-          # 幂等:该版本已上传则跳过,失败重试不会因"已发布"而中断
-          if curl -fsS "https://crates.io/api/v1/crates/smartpacker/${VERSION}" >/dev/null; then
+          # 幂等:该版本已上传则跳过,失败重试不会因"已发布"而中断。
+          # 注意 crates.io API 要求 User-Agent,缺失时对已存在版本返回 403
+          # (而非 404),会把"已存在"误判为"不存在"。
+          if curl -fsS "https://crates.io/api/v1/crates/smartpacker/${VERSION}" \
+            -H "User-Agent: smartpacker-release-check" >/dev/null; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "版本身份已存在,跳过发布"
           else
