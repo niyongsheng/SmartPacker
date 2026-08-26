@@ -24,6 +24,36 @@ const COS30: f64 = 0.866_025_403_784_438_6;
 /// `sin(30°)`。
 const SIN30: f64 = 0.5;
 
+/// 立方体 12 条棱（角点索引对，角点序见 [`cube_corners`]）。
+const CUBE_EDGES: [(usize, usize); 12] = [
+    (0, 1),
+    (1, 2),
+    (2, 3),
+    (3, 0),
+    (4, 5),
+    (5, 6),
+    (6, 7),
+    (7, 4),
+    (0, 4),
+    (1, 5),
+    (2, 6),
+    (3, 7),
+];
+
+/// 立方体 8 角点（原点 `(x,y,z)` + 尺寸 `(w,h,d)`），bounds/箱体/物品三处共用。
+fn cube_corners(x: f64, y: f64, z: f64, w: f64, h: f64, d: f64) -> [[f64; 3]; 8] {
+    [
+        [x, y, z],
+        [x + w, y, z],
+        [x + w, y + h, z],
+        [x, y + h, z],
+        [x, y, z + d],
+        [x + w, y, z + d],
+        [x + w, y + h, z + d],
+        [x, y + h, z + d],
+    ]
+}
+
 /// 等距投影：3D 坐标 → 2D 世界坐标（屏幕向右为 +x，向上为 +高度）。
 fn project(p: [f64; 3]) -> (f64, f64) {
     let (x, y, z) = (p[0], p[1], p[2]);
@@ -161,34 +191,11 @@ impl<'a> Painter<'a> {
     fn bounds(&self) -> (f64, f64, f64, f64) {
         let mut pts: Vec<[f64; 3]> = Vec::new();
         let (w, h, d) = (self.bin.width, self.bin.height, self.bin.depth);
-        for &(x, y, z) in &[
-            (0.0, 0.0, 0.0),
-            (w, 0.0, 0.0),
-            (w, h, 0.0),
-            (0.0, h, 0.0),
-            (0.0, 0.0, d),
-            (w, 0.0, d),
-            (w, h, d),
-            (0.0, h, d),
-        ] {
-            pts.push([x, y, z]);
-        }
+        pts.extend(cube_corners(0.0, 0.0, 0.0, w, h, d));
         for item in &self.bin.items {
             let (x, y, z) = (item.position[0], item.position[1], item.position[2]);
             let dim = item.dimension();
-            let (iw, ih, id) = (dim[0], dim[1], dim[2]);
-            for &(dx, dy, dz) in &[
-                (0.0, 0.0, 0.0),
-                (iw, 0.0, 0.0),
-                (iw, ih, 0.0),
-                (0.0, ih, 0.0),
-                (0.0, 0.0, id),
-                (iw, 0.0, id),
-                (iw, ih, id),
-                (0.0, ih, id),
-            ] {
-                pts.push([x + dx, y + dy, z + dz]);
-            }
+            pts.extend(cube_corners(x, y, z, dim[0], dim[1], dim[2]));
         }
         let mut min_x = f64::INFINITY;
         let mut max_x = f64::NEG_INFINITY;
@@ -207,31 +214,8 @@ impl<'a> Painter<'a> {
     /// 绘制箱体线框。
     fn draw_bin<DB: DrawingBackend>(&self, chart: &mut Chart<'_, DB>) -> io::Result<()> {
         let (w, h, d) = (self.bin.width, self.bin.height, self.bin.depth);
-        let c: [[f64; 3]; 8] = [
-            [0.0, 0.0, 0.0],
-            [w, 0.0, 0.0],
-            [w, h, 0.0],
-            [0.0, h, 0.0],
-            [0.0, 0.0, d],
-            [w, 0.0, d],
-            [w, h, d],
-            [0.0, h, d],
-        ];
-        let edges: [(usize, usize); 12] = [
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 0),
-            (4, 5),
-            (5, 6),
-            (6, 7),
-            (7, 4),
-            (0, 4),
-            (1, 5),
-            (2, 6),
-            (3, 7),
-        ];
-        for (a, b) in edges {
+        let c = cube_corners(0.0, 0.0, 0.0, w, h, d);
+        for (a, b) in CUBE_EDGES {
             let line = vec![project(c[a]), project(c[b])];
             chart
                 .draw_series(std::iter::once(PathElement::new(line, BLACK)))
@@ -280,16 +264,7 @@ impl<'a> Painter<'a> {
         fontsize: u32,
     ) -> io::Result<()> {
         let (w, h, d) = (dim[0], dim[1], dim[2]);
-        let v: [[f64; 3]; 8] = [
-            [x, y, z],
-            [x + w, y, z],
-            [x + w, y + h, z],
-            [x, y + h, z],
-            [x, y, z + d],
-            [x + w, y, z + d],
-            [x + w, y + h, z + d],
-            [x, y + h, z + d],
-        ];
+        let v = cube_corners(x, y, z, w, h, d);
         let fill = with_alpha(color, alpha);
         // 顶面 + 两个侧面
         for face in [[3usize, 2, 6, 7], [1, 2, 6, 5], [4, 5, 6, 7]] {
@@ -299,21 +274,7 @@ impl<'a> Painter<'a> {
                 .map_err(io_err)?;
         }
         // 线框
-        let edges: [(usize, usize); 12] = [
-            (0, 1),
-            (1, 2),
-            (2, 3),
-            (3, 0),
-            (4, 5),
-            (5, 6),
-            (6, 7),
-            (7, 4),
-            (0, 4),
-            (1, 5),
-            (2, 6),
-            (3, 7),
-        ];
-        for (a, b) in edges {
+        for (a, b) in CUBE_EDGES {
             let line = vec![project(v[a]), project(v[b])];
             chart
                 .draw_series(std::iter::once(PathElement::new(line, BLACK)))
