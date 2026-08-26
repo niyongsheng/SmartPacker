@@ -7,7 +7,8 @@ A 3D packing algorithm library for load optimization of logistics cabinets and c
 
 ## Application
 
-<img alt="BestLoad" src="https://github.com/user-attachments/assets/238d8f44-4011-4f69-85ec-ba6e8c44973b" width="100" />  
+<img alt="BestLoad" src="https://github.com/user-attachments/assets/238d8f44-4011-4f69-85ec-ba6e8c44973b" width="100" />
+
 [优载 BestLoad](https://github.com/niyongsheng/best-load)
 
 ## Features
@@ -77,10 +78,11 @@ Input conventions are documented in the module docs of [`smartpacker-server/src/
 `box[0].openTop[0]` is used as `put_type`, items are expanded by `count`, `type==2` is treated as a cylinder,
 and each `item` may carry an optional `allowed_float_ratio` (default 0.25).
 
-## Contact
-
-* E-mail: niyongsheng@Outlook.com
-
 ## License
 
 [Apache-2.0](LICENSE)
+
+## Contact
+
+- X: [@niyongsheng](https://x.com/niyongsheng)
+- E‑mail: niyongsheng@Outlook.com
