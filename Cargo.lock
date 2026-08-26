@@ -1015,7 +1015,7 @@ checksum = "8ed6a63f02c8539c91a8685a86f4099661ba3da017932f6ebbea6de3f0fa7c90"
 
 [[package]]
 name = "smartpacker"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "plotters",
  "proptest",
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "smartpacker-server"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "axum",
  "http-body-util",

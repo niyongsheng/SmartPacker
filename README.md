@@ -1,7 +1,7 @@
 # SmartPacker
 
 ![logo](./logo.png)
-![Pages](https://img.shields.io/badge/r0.2.0-beta-brightgreen.svg?style=flat-square)
+![Pages](https://img.shields.io/badge/r0.3.0-beta-brightgreen.svg?style=flat-square)
 
 A 3D packing algorithm library for load optimization of logistics cabinets and containers.
 
