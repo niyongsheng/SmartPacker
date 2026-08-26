@@ -1,0 +1,72 @@
+name: rust
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # 发布前置门禁:与仓库约定(CLAUDE.md)保持一致
+  check:
+    name: 门禁 (fmt / clippy / test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: 格式化检查
+        run: cargo fmt --check
+      - name: 静态检查
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: 测试
+        run: cargo test --all-features --workspace
+
+  # 将 smartpacker 库发布到 crates.io(server publish = false,不受影响)
+  publish:
+    name: 发布 smartpacker 到 crates.io
+    needs: check
+    runs-on: ubuntu-latest
+    environment: crates.io
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: 解析版本并校验 tag
+        id: release
+        run: |
+          VERSION="$(cargo metadata --format-version 1 --no-deps \
+            | jq -r '.packages[] | select(.name == "smartpacker") | .version')"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # 仅 tag 触发时校验:标签必须是 v<版本>,避免误发布
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if [ "$TAG_VERSION" != "$VERSION" ]; then
+              echo "::error::标签 v${TAG_VERSION} 与 Cargo.toml 版本 ${VERSION} 不一致"
+              exit 1
+            fi
+          fi
+          # 幂等:该版本已上传则跳过,失败重试不会因"已发布"而中断
+          if curl -fsS "https://crates.io/api/v1/crates/smartpacker/${VERSION}" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "版本身份已存在,跳过发布"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: 发布到 crates.io
+        if: steps.release.outputs.exists == 'false'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish -p smartpacker
