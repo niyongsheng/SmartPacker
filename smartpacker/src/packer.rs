@@ -7,7 +7,6 @@
 use crate::auxiliary::{intersect, quantize};
 use crate::constants::{ItemType, RotationType};
 use crate::item::Item;
-use std::cmp::Ordering;
 use std::fmt;
 
 /// 几何比较容差。
@@ -45,10 +44,10 @@ pub struct Bin {
     pub unfitted_items: Vec<Item>,
     /// 数值量化保留的小数位数。
     pub number_of_decimals: u32,
-    /// 是否启用 fix_point 重力修正。
-    pub fix_point: bool,
-    /// 是否启用底部支撑检查（阈值由每件物品的 `allowed_float_ratio` 决定）。
-    pub check_stable: bool,
+    /// 是否启用 fix_point 重力修正（配置唯一来源 `PackOptions`，pack 时注入）。
+    pub(crate) fix_point: bool,
+    /// 是否启用底部支撑检查（配置唯一来源 `PackOptions`，pack 时注入）。
+    pub(crate) check_stable: bool,
     /// 装箱顺序类型（1 一般 / 2 顶开 / 其他不排序）。
     pub put_type: i32,
     /// 四象限重量分布（百分比）。
@@ -114,9 +113,10 @@ impl Bin {
     ///
     /// 返回是否成功放入；对角件之外的调用会变异 `item` 的 `position`/`rotation_type`。
     pub fn put_item(&mut self, item: &mut Item, pivot: [f64; 3]) -> bool {
-        let mut fit = false;
         let valid_item_position = item.position;
         item.position = pivot;
+        // 重量检查只依赖已放物品与当前件，旋转循环内不变，提前算一次
+        let total = self.total_weight();
         let n_rot = if item.updown {
             RotationType::ALL.len()
         } else {
@@ -129,58 +129,77 @@ impl Bin {
                 || self.height < pivot[1] + dimension[1]
                 || self.depth < pivot[2] + dimension[2]
             {
-                continue;
+                continue; // 该旋转越界，尝试下一旋转
             }
-            fit = true;
-            for cur in self.items.iter() {
-                if intersect(cur, item) {
-                    fit = false;
-                    break;
-                }
-            }
-            if fit {
-                if self.total_weight() + item.weight > self.max_weight {
-                    // 超重：不恢复 position
-                    return false;
-                }
-                if self.fix_point {
-                    let w = dimension[0];
-                    let h = dimension[1];
-                    let d = dimension[2];
-                    let mut x = pivot[0];
-                    let mut y = pivot[1];
-                    let mut z = pivot[2];
-                    for _ in 0..3 {
-                        y = self.check_height([x, x + w, y, y + h, z, z + d]);
-                        x = self.check_width([x, x + w, y, y + h, z, z + d]);
-                        z = self.check_depth([x, x + w, y, y + h, z, z + d]);
-                    }
-                    if self.check_stable {
-                        // 垂直底部支撑检查：比例主规则 + 底面四角兜底（见 bottom_support）。
-                        // 每件物品的允许悬空比例由 Item::allowed_float_ratio 决定。
-                        let (ratio, corners_ok) = self.bottom_support(x, w, z, d, y);
-                        let min_support = 1.0 - item.allowed_float_ratio;
-                        if ratio + EPS < min_support && !corners_ok {
-                            // 稳定性失败：恢复 position
-                            item.position = valid_item_position;
-                            return false;
-                        }
-                    }
-                    self.fit_items.push([x, x + w, y, y + h, z, z + d]);
-                    // 位置量化到 0 位小数（应用数据本身为整数，保持整数输出）
-                    item.position = [quantize(x, 0), quantize(y, 0), quantize(z, 0)];
-                }
-                // 真实放置序号：每箱内按时间序 1 起，push 时记录（不受 put_order 重排影响）
-                item.step = self.items.len() + 1;
-                self.items.push(item.clone());
-            } else {
+            // 第一个放得下的旋转：碰撞或成功都立即返回，不再尝试后续旋转
+            if self.items.iter().any(|cur| intersect(cur, item)) {
+                // 碰撞：恢复 position
                 item.position = valid_item_position;
+                return false;
             }
-            return fit;
+            if total + item.weight > self.max_weight {
+                // 超重：不恢复 position
+                return false;
+            }
+            if self.fix_point {
+                let w = dimension[0];
+                let h = dimension[1];
+                let d = dimension[2];
+                let mut x = pivot[0];
+                let mut y = pivot[1];
+                let mut z = pivot[2];
+                for _ in 0..3 {
+                    y = self.check_axis(
+                        [x, x + w, y, y + h, z, z + d],
+                        self.height,
+                        (0, 1),
+                        (4, 5),
+                        (2, 3),
+                        (2, 3),
+                        2,
+                    );
+                    x = self.check_axis(
+                        [x, x + w, y, y + h, z, z + d],
+                        self.width,
+                        (4, 5),
+                        (2, 3),
+                        (0, 1),
+                        (0, 1),
+                        0,
+                    );
+                    z = self.check_axis(
+                        [x, x + w, y, y + h, z, z + d],
+                        self.depth,
+                        (0, 1),
+                        (2, 3),
+                        (4, 5),
+                        (4, 5),
+                        4,
+                    );
+                }
+                if self.check_stable {
+                    // 垂直底部支撑检查：比例主规则 + 底面四角兜底（见 bottom_support）。
+                    // 每件物品的允许悬空比例由 Item::allowed_float_ratio 决定。
+                    let (ratio, corners_ok) = self.bottom_support(x, w, z, d, y);
+                    let min_support = 1.0 - item.allowed_float_ratio;
+                    if ratio + EPS < min_support && !corners_ok {
+                        // 稳定性失败：恢复 position
+                        item.position = valid_item_position;
+                        return false;
+                    }
+                }
+                self.fit_items.push([x, x + w, y, y + h, z, z + d]);
+                // 位置量化到 0 位小数（应用数据本身为整数，保持整数输出）
+                item.position = [quantize(x, 0), quantize(y, 0), quantize(z, 0)];
+            }
+            // 真实放置序号：每箱内按时间序 1 起，push 时记录（不受 put_order 重排影响）
+            item.step = self.items.len() + 1;
+            self.items.push(item.clone());
+            return true;
         }
         // 全部旋转越界（for-else）：恢复 position
         item.position = valid_item_position;
-        fit
+        false
     }
 
     /// 计算物品底面（位于高度 `y0`、范围 `[x, x+w] × [z, z+d]`）的支撑情况。
@@ -221,94 +240,48 @@ impl Bin {
         (support / bottom_area, corners.iter().all(|&c| c))
     }
 
-    /// 修正物品在深度（z）方向的位置。
-    fn check_depth(&self, unfix_point: [f64; 6]) -> f64 {
-        let mut z: Vec<[f64; 2]> = vec![[0.0, 0.0], [self.depth, self.depth]];
+    /// 修正物品在指定轴方向的位置（重力下落 / gap-snapping）。
+    ///
+    /// 三个轴向共用同一扫描逻辑，仅重叠轴对、收集区间与容器跨度不同
+    /// （height: 重叠看 x/z 投影、收集 y 区间；width: 重叠看 z/y 投影、收集 x 区间；
+    /// depth: 重叠看 x/y 投影、收集 z 区间）。
+    #[allow(clippy::too_many_arguments)]
+    fn check_axis(
+        &self,
+        unfix_point: [f64; 6],
+        span: f64,
+        pair_a: (usize, usize),
+        pair_b: (usize, usize),
+        collect: (usize, usize),
+        top: (usize, usize),
+        ret: usize,
+    ) -> f64 {
+        let mut v: Vec<[f64; 2]> = vec![[0.0, 0.0], [span, span]];
         for j in &self.fit_items {
-            let x_overlap = overlap_len(
-                j[0] as i64,
-                j[1] as i64,
-                unfix_point[0] as i64,
-                unfix_point[1] as i64,
+            let ov_a = overlap_len(
+                j[pair_a.0] as i64,
+                j[pair_a.1] as i64,
+                unfix_point[pair_a.0] as i64,
+                unfix_point[pair_a.1] as i64,
             );
-            let y_overlap = overlap_len(
-                j[2] as i64,
-                j[3] as i64,
-                unfix_point[2] as i64,
-                unfix_point[3] as i64,
+            let ov_b = overlap_len(
+                j[pair_b.0] as i64,
+                j[pair_b.1] as i64,
+                unfix_point[pair_b.0] as i64,
+                unfix_point[pair_b.1] as i64,
             );
-            if x_overlap != 0 && y_overlap != 0 {
-                z.push([j[4], j[5]]);
+            if ov_a != 0 && ov_b != 0 {
+                v.push([j[collect.0], j[collect.1]]);
             }
         }
-        let top_depth = unfix_point[5] - unfix_point[4];
-        z.sort_by(|a, b| a[1].partial_cmp(&b[1]).unwrap_or(Ordering::Equal));
-        for k in 0..z.len().saturating_sub(1) {
-            if z[k + 1][0] - z[k][1] >= top_depth {
-                return z[k][1];
+        let top_len = unfix_point[top.1] - unfix_point[top.0];
+        v.sort_by(|a, b| a[1].total_cmp(&b[1]));
+        for k in 0..v.len().saturating_sub(1) {
+            if v[k + 1][0] - v[k][1] >= top_len {
+                return v[k][1];
             }
         }
-        unfix_point[4]
-    }
-
-    /// 修正物品在宽度（x）方向的位置。
-    fn check_width(&self, unfix_point: [f64; 6]) -> f64 {
-        let mut x: Vec<[f64; 2]> = vec![[0.0, 0.0], [self.width, self.width]];
-        for j in &self.fit_items {
-            let z_overlap = overlap_len(
-                j[4] as i64,
-                j[5] as i64,
-                unfix_point[4] as i64,
-                unfix_point[5] as i64,
-            );
-            let y_overlap = overlap_len(
-                j[2] as i64,
-                j[3] as i64,
-                unfix_point[2] as i64,
-                unfix_point[3] as i64,
-            );
-            if z_overlap != 0 && y_overlap != 0 {
-                x.push([j[0], j[1]]);
-            }
-        }
-        let top_width = unfix_point[1] - unfix_point[0];
-        x.sort_by(|a, b| a[1].partial_cmp(&b[1]).unwrap_or(Ordering::Equal));
-        for k in 0..x.len().saturating_sub(1) {
-            if x[k + 1][0] - x[k][1] >= top_width {
-                return x[k][1];
-            }
-        }
-        unfix_point[0]
-    }
-
-    /// 修正物品在高度（y）方向的位置（重力下落）。
-    fn check_height(&self, unfix_point: [f64; 6]) -> f64 {
-        let mut y: Vec<[f64; 2]> = vec![[0.0, 0.0], [self.height, self.height]];
-        for j in &self.fit_items {
-            let x_overlap = overlap_len(
-                j[0] as i64,
-                j[1] as i64,
-                unfix_point[0] as i64,
-                unfix_point[1] as i64,
-            );
-            let z_overlap = overlap_len(
-                j[4] as i64,
-                j[5] as i64,
-                unfix_point[4] as i64,
-                unfix_point[5] as i64,
-            );
-            if x_overlap != 0 && z_overlap != 0 {
-                y.push([j[2], j[3]]);
-            }
-        }
-        let top_height = unfix_point[3] - unfix_point[2];
-        y.sort_by(|a, b| a[1].partial_cmp(&b[1]).unwrap_or(Ordering::Equal));
-        for k in 0..y.len().saturating_sub(1) {
-            if y[k + 1][0] - y[k][1] >= top_height {
-                return y[k][1];
-            }
-        }
-        unfix_point[2]
+        unfix_point[ret]
     }
 
     /// 生成 8 个角件。
@@ -469,6 +442,12 @@ impl Packer {
             item.format_numbers(options.number_of_decimals);
         }
 
+        // 1.5 配置注入：fix_point/check_stable 一次性设置到各箱（pack2_bin 不再逐件重写）
+        for bin in self.bins.iter_mut() {
+            bin.fix_point = options.fix_point;
+            bin.check_stable = options.check_stable;
+        }
+
         let bigger = options.bigger_first;
         self.binding = options.binding.clone();
 
@@ -477,9 +456,9 @@ impl Packer {
             let va = a.volume();
             let vb = b.volume();
             if bigger {
-                vb.partial_cmp(&va).unwrap_or(Ordering::Equal)
+                vb.total_cmp(&va)
             } else {
-                va.partial_cmp(&vb).unwrap_or(Ordering::Equal)
+                va.total_cmp(&vb)
             }
         });
 
@@ -493,38 +472,16 @@ impl Packer {
             self.sort_binding(&mut shared_unfitted);
         }
 
-        // 5. 逐箱 pack
+        // 5. 逐箱 pack（binding 与非 binding 唯一差异：unfitted 的归属——
+        //    binding 时进跨箱共享累加器，非 binding 时进本箱）
         for idx in 0..self.bins.len() {
-            if binding_active {
-                // 首轮遍历：仅驱动 arena 物品的 position/rotation 变异（结果随后被
-                // 清空丢弃，对齐 Python 的 `bin.items = []` 与 `bin.unfitted_items`
-                // 别名重绑定语义）。
-                let item_ids = self.item_ids.clone();
-                for &item_id in &item_ids {
-                    Self::pack2_bin(&mut self.bins[idx], item_id, &mut self.arena, options);
-                }
-
-                // 重排、清空箱、重装（unfitted 绑定到共享累加器）
-                self.sort_item_ids(bigger);
-                self.bins[idx].items.clear();
-                self.bins[idx].unfitted_ids = shared_unfitted.clone();
-                let width = self.bins[idx].width;
-                let height = self.bins[idx].height;
-                self.bins[idx].fit_items = vec![[0.0, width, 0.0, height, 0.0, 0.0]];
-                let ids = self.item_ids.clone();
-                for &item_id in &ids {
-                    let fitted =
-                        Self::pack2_bin(&mut self.bins[idx], item_id, &mut self.arena, options);
-                    if !fitted {
+            let ids = self.item_ids.clone();
+            for &item_id in &ids {
+                let fitted = Self::pack2_bin(&mut self.bins[idx], item_id, &mut self.arena);
+                if !fitted {
+                    if binding_active {
                         shared_unfitted.push(item_id);
-                    }
-                }
-            } else {
-                let item_ids = self.item_ids.clone();
-                for &item_id in &item_ids {
-                    let fitted =
-                        Self::pack2_bin(&mut self.bins[idx], item_id, &mut self.arena, options);
-                    if !fitted {
+                    } else {
                         self.bins[idx].unfitted_ids.push(item_id);
                     }
                 }
@@ -534,22 +491,15 @@ impl Packer {
             let gravity = Self::gravity_center(&self.bins[idx]);
             self.bins[idx].gravity = gravity;
 
-            // distribute：移除已装箱物品
+            // distribute：移除已装箱物品（单趟 retain，取代逐个 position+remove 的 O(n²)）
             if options.distribute_items {
-                let partnos: Vec<String> = self.bins[idx]
+                let fitted: std::collections::HashSet<&str> = self.bins[idx]
                     .items
                     .iter()
-                    .map(|i| i.partno.clone())
+                    .map(|i| i.partno.as_str())
                     .collect();
-                for pno in partnos {
-                    if let Some(pos) = self
-                        .item_ids
-                        .iter()
-                        .position(|&id| self.arena[id].partno == pno)
-                    {
-                        self.item_ids.remove(pos);
-                    }
-                }
+                self.item_ids
+                    .retain(|&id| !fitted.contains(self.arena[id].partno.as_str()));
             }
         }
 
@@ -588,55 +538,59 @@ impl Packer {
         }
     }
 
-    /// 排序 `item_ids`（稳定）：level 升 -> loadbear 降 -> 体积方向。
+    /// 排序 `item_ids`（稳定）：level 升 -> loadbear 降 -> 体积方向
+    /// （三次稳定排序链等价于单次复合排序，主键 level、次 loadbear、末体积）。
     fn sort_item_ids(&mut self, bigger_first: bool) {
         let arena = &self.arena;
         self.item_ids.sort_by(|&a, &b| {
             let va = arena[a].volume();
             let vb = arena[b].volume();
-            if bigger_first {
-                vb.partial_cmp(&va).unwrap_or(Ordering::Equal)
+            let by_volume = if bigger_first {
+                vb.total_cmp(&va)
             } else {
-                va.partial_cmp(&vb).unwrap_or(Ordering::Equal)
-            }
+                va.total_cmp(&vb)
+            };
+            arena[a]
+                .level
+                .cmp(&arena[b].level)
+                .then(arena[b].loadbear.cmp(&arena[a].loadbear))
+                .then(by_volume)
         });
-        self.item_ids
-            .sort_by(|&a, &b| arena[b].loadbear.cmp(&arena[a].loadbear));
-        self.item_ids
-            .sort_by(|&a, &b| arena[a].level.cmp(&arena[b].level));
     }
 
-    /// `sortBinding`：按绑定组轮询交错排列；多余物品进入 `extra`（共享累加器）。
+    /// `sortBinding`：按绑定组轮询交错排列；组内超出最小组长度的物品进入
+    /// `extra`（共享累加器），未绑定物品保持原顺序追加在组序列之后。
     ///
-    /// 完全复刻 Python 的嵌套循环结构：外层遍历每个绑定组，内层遍历全部物品。
-    /// 未落入当前组的物品进入 `front`/`back`（`item.name not in self.binding`
-    /// 恒为真，因为某字符串不会等于任一"组分列表"）。组间轮询取各组元素交错；
-    /// 超出最小组长度的物品进入 `extra`。
+    /// 按应用意图实现，不复刻 Python 的嵌套循环怪癖：
+    /// - 属于任一组的物品只进对应组（Python 原版在遍历其他组时会把它们
+    ///   重复塞进 front/back，导致同一物品在结果中重复出现）；
+    /// - 未绑定物品统一排在绑定组序列之后（Python 在第一组为空时把它们提到最前）；
+    /// - 空绑定组跳过（spec 偏差 #1）。
     fn sort_binding(&mut self, extra: &mut Vec<usize>) {
-        let binding = self.binding.clone();
         let arena = &self.arena;
-        let items = self.item_ids.clone();
-
-        let mut groups: Vec<Vec<usize>> = vec![Vec::new(); binding.len()];
-        let mut front: Vec<usize> = Vec::new();
-        let mut back: Vec<usize> = Vec::new();
-
-        for (gi, group) in binding.iter().enumerate() {
-            for &id in &items {
-                if group.contains(&arena[id].name) {
-                    groups[gi].push(id);
-                } else {
-                    // `item.name not in self.binding` 恒为真（见 doc）
-                    if groups[0].is_empty() && !front.contains(&id) {
-                        front.push(id);
-                    } else if !back.contains(&id) && !front.contains(&id) {
-                        back.push(id);
-                    }
-                }
+        // 物品名 → 所属组索引列表（一个名字可出现在多个组）
+        let mut by_name: std::collections::HashMap<&str, Vec<usize>> =
+            std::collections::HashMap::new();
+        for (gi, group) in self.binding.iter().enumerate() {
+            for name in group {
+                by_name.entry(name.as_str()).or_default().push(gi);
             }
         }
 
-        // 修复：跳过空绑定组，取非空组的最小长度（spec 偏差 #1）
+        let mut groups: Vec<Vec<usize>> = vec![Vec::new(); self.binding.len()];
+        let mut unbound: Vec<usize> = Vec::new();
+        for &id in &self.item_ids {
+            match by_name.get(arena[id].name.as_str()) {
+                Some(gis) => {
+                    for &gi in gis {
+                        groups[gi].push(id);
+                    }
+                }
+                None => unbound.push(id),
+            }
+        }
+
+        // 取非空组的最小长度（spec 偏差 #1：空绑定组跳过）
         let min_c = groups
             .iter()
             .filter(|g| !g.is_empty())
@@ -644,6 +598,7 @@ impl Packer {
             .min()
             .unwrap_or(0);
 
+        // 组间轮询交错：每组第 i 个依次排入
         let mut sort_bind: Vec<usize> = Vec::new();
         for i in 0..min_c {
             for g in &groups {
@@ -653,26 +608,22 @@ impl Packer {
             }
         }
 
+        // 组内超出 min_c 的物品进 extra（同一物品跨组重复出现时只进一次）
+        let in_sort: std::collections::HashSet<usize> = sort_bind.iter().copied().collect();
         for g in &groups {
             for &id in g {
-                if !sort_bind.contains(&id) {
+                if !in_sort.contains(&id) {
                     extra.push(id);
                 }
             }
         }
 
-        let mut new_items = Vec::with_capacity(front.len() + sort_bind.len() + back.len());
-        new_items.extend(front.iter().copied());
-        new_items.extend(sort_bind.iter().copied());
-        new_items.extend(back.iter().copied());
-        self.item_ids = new_items;
+        self.item_ids = sort_bind;
+        self.item_ids.extend(unbound);
     }
 
     /// 将单个物品尝试装入指定箱子（对应 Python `pack2Bin`）。返回是否装入。
-    fn pack2_bin(bin: &mut Bin, item_id: usize, arena: &mut [Item], options: &PackOptions) -> bool {
-        bin.fix_point = options.fix_point;
-        bin.check_stable = options.check_stable;
-
+    fn pack2_bin(bin: &mut Bin, item_id: usize, arena: &mut [Item]) -> bool {
         if bin.corner != 0.0 && bin.items.is_empty() {
             let corners = bin.add_corner();
             for (i, c) in corners.into_iter().enumerate() {
@@ -722,30 +673,10 @@ impl Packer {
         for item in &bin.items {
             let x_st = item.position[0] as i64;
             let y_st = item.position[1] as i64;
-            let (x_ed, y_ed) = match item.rotation_type {
-                RotationType::RT_WHD => (
-                    item.position[0] + item.width,
-                    item.position[1] + item.height,
-                ),
-                RotationType::RT_HWD => (
-                    item.position[0] + item.height,
-                    item.position[1] + item.width,
-                ),
-                RotationType::RT_HDW => (
-                    item.position[0] + item.height,
-                    item.position[1] + item.depth,
-                ),
-                RotationType::RT_DHW => (
-                    item.position[0] + item.depth,
-                    item.position[1] + item.height,
-                ),
-                RotationType::RT_DWH => {
-                    (item.position[0] + item.depth, item.position[1] + item.width)
-                }
-                _ => (item.position[0] + item.width, item.position[1] + item.depth),
-            };
-            let x_ed = x_ed as i64;
-            let y_ed = y_ed as i64;
+            // 旋转后的右/上缘：dimension() 按 rotation_type 置换（唯一事实源）
+            let d = item.dimension();
+            let x_ed = (item.position[0] + d[0]) as i64;
+            let y_ed = (item.position[1] + d[1]) as i64;
             let wt = item.weight as i64 as f64;
 
             for j in 0..4usize {
@@ -797,39 +728,23 @@ impl Packer {
     }
 
     /// `putOrder`：按 `put_type` 排序各箱 items。
+    /// 原为多次稳定排序，末次为主键；等价合并为单次复合排序
+    /// （put_type 2: z 主/y 次/x 末;put_type 1: x 主/z 次/y 末）。
     fn put_order(&mut self) {
         for bin in self.bins.iter_mut() {
             if bin.put_type == 2 {
                 bin.items.sort_by(|a, b| {
-                    a.position[0]
-                        .partial_cmp(&b.position[0])
-                        .unwrap_or(Ordering::Equal)
-                });
-                bin.items.sort_by(|a, b| {
-                    a.position[1]
-                        .partial_cmp(&b.position[1])
-                        .unwrap_or(Ordering::Equal)
-                });
-                bin.items.sort_by(|a, b| {
                     a.position[2]
-                        .partial_cmp(&b.position[2])
-                        .unwrap_or(Ordering::Equal)
+                        .total_cmp(&b.position[2])
+                        .then(a.position[1].total_cmp(&b.position[1]))
+                        .then(a.position[0].total_cmp(&b.position[0]))
                 });
             } else if bin.put_type == 1 {
                 bin.items.sort_by(|a, b| {
-                    a.position[1]
-                        .partial_cmp(&b.position[1])
-                        .unwrap_or(Ordering::Equal)
-                });
-                bin.items.sort_by(|a, b| {
-                    a.position[2]
-                        .partial_cmp(&b.position[2])
-                        .unwrap_or(Ordering::Equal)
-                });
-                bin.items.sort_by(|a, b| {
                     a.position[0]
-                        .partial_cmp(&b.position[0])
-                        .unwrap_or(Ordering::Equal)
+                        .total_cmp(&b.position[0])
+                        .then(a.position[2].total_cmp(&b.position[2]))
+                        .then(a.position[1].total_cmp(&b.position[1]))
                 });
             }
         }
