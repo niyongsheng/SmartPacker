@@ -1,6 +1,6 @@
 //! 货物悬空检测器:按「允许悬空比例」语义逐件检查垂直支撑,排查悬空问题。
 //!
-//! 规则(与算法 put_item 中的判定一致):
+//! 规则(与算法 put_item 中的判定一致,判定实现见 `tests/common`):
 //! - 支撑比 = Σ( y1 == y0 托底的支撑物在 x/z 投影重叠面积 ) / (w×d);
 //! - 合法当且仅当 支撑比 ≥ 1 − allowed_float_ratio,或底面四角全部落实(兜底)。
 //!
@@ -13,15 +13,18 @@
 //! 另统计放置物品间的几何重叠对(启发式固有输出,见 doc.md §4.4)。
 //!
 //! 检查对象:
-//! 1. best-load 种子数据的真实场景(40HQ×2 + 20GP×3 + 474 件货);
+//! 1. best-load 种子数据的真实场景(40HQ×2 + 20GP×3 + 474 件);
 //! 2. 2000 组确定性随机扫描(每组随机允许悬空档位)。
 //!
 //! 用法:`cargo run --example floating_check`
 
+#[path = "../tests/common/mod.rs"]
+mod common;
+
+use common::{support_stats, FLOAT_RATIOS};
 use smartpacker::{Bin, Item, ItemType, PackOptions, Packer};
 
 const EPS: f64 = 1e-9;
-const FLOAT_RATIOS: [f64; 5] = [0.0, 0.25, 0.5, 0.75, 1.0];
 
 // ---------- 支撑检测 ----------
 
@@ -77,61 +80,13 @@ fn check_bin(
         }
         let [w, h, d] = it.dimension();
         let [x, y, z] = it.position;
-        let bottom_area = w * d;
-        if bottom_area <= EPS {
+        if w * d <= EPS {
             continue; // 退化物品(零底面积)不检测
         }
         stats.checked += 1;
 
-        let mut support = 0.0;
-        if y <= EPS {
-            support = bottom_area; // 落箱底,全支撑
-        } else {
-            for j in 0..n {
-                if i == j {
-                    continue;
-                }
-                let other = &bin.items[j];
-                let [ow, _, od] = other.dimension();
-                let [ox, oy, oz] = other.position;
-                let top = oy + other.dimension()[1];
-                if (top - y).abs() > EPS {
-                    continue; // 顶面必须恰好托住底面
-                }
-                let x_ov = (x + w).min(ox + ow) - x.max(ox);
-                let z_ov = (z + d).min(oz + od) - z.max(oz);
-                if x_ov > EPS && z_ov > EPS {
-                    support += x_ov * z_ov;
-                }
-            }
-        }
-
-        let ratio = support / bottom_area;
-        let min_support = 1.0 - it.allowed_float_ratio;
-        let mut legal = ratio + EPS >= min_support;
-        let mut corners_ok = false;
-        if !legal {
-            // 四角兜底:底面四角各自落在某个 y1==y0 支撑矩形的 x/z 范围内。
-            let in_rect = |cx: f64, cz: f64| -> bool {
-                (0..n).any(|j| {
-                    if j == i {
-                        return false;
-                    }
-                    let other = &bin.items[j];
-                    let [ow, _, od] = other.dimension();
-                    let [ox, oy, oz] = other.position;
-                    let top = oy + other.dimension()[1];
-                    (top - y).abs() <= EPS
-                        && cx >= ox - EPS
-                        && cx <= ox + ow + EPS
-                        && cz >= oz - EPS
-                        && cz <= oz + od + EPS
-                })
-            };
-            corners_ok =
-                in_rect(x, z) && in_rect(x + w, z) && in_rect(x, z + d) && in_rect(x + w, z + d);
-            legal = corners_ok;
-        }
+        let (ratio, corners_ok) = support_stats(it, bin);
+        let legal = ratio + EPS >= 1.0 - it.allowed_float_ratio || corners_ok;
 
         if ratio <= EPS {
             stats.float += 1;
@@ -196,21 +151,14 @@ fn check_bin(
         }
     }
 
-    // 重叠对统计(严格三维相交)
+    // 重叠对统计(严格三维相交,复用库内 intersect)
     for i in 0..n {
         for j in (i + 1)..n {
             let (a, b) = (&bin.items[i], &bin.items[j]);
             if a.partno.starts_with("corner") && b.partno.starts_with("corner") {
                 continue;
             }
-            let [aw, ah, ad] = a.dimension();
-            let [ax, ay, az] = a.position;
-            let [bw, bh, bd] = b.dimension();
-            let [bx, by, bz] = b.position;
-            let x_ov = (ax + aw).min(bx + bw) - ax.max(bx);
-            let y_ov = (ay + ah).min(by + bh) - ay.max(by);
-            let z_ov = (az + ad).min(bz + bd) - az.max(bz);
-            if x_ov > EPS && y_ov > EPS && z_ov > EPS {
+            if smartpacker::intersect(a, b) {
                 stats.overlap_pairs += 1;
             }
         }
@@ -235,110 +183,9 @@ fn run_pack(
 
 // ---------- 场景构造 ----------
 
-/// best-load 种子数据场景(docs/seed-test-data.sql):40HQ×2 + 20GP×3 + 474 件货。
-/// allowed_float_ratio 与计划一致:纸箱 A/B 0.25,重型设备/托盘/长件 0(必须稳妥支撑)。
+/// best-load 种子数据场景(与门禁测试共享,见 tests/common)。
 fn seed_packer() -> Packer {
-    let mut packer = Packer::new();
-    for i in 0..2 {
-        packer.add_bin(Bin::new(
-            format!("bin-40hq-01#{i}"),
-            [12032.0, 2698.0, 2352.0],
-            26000.0,
-        ));
-    }
-    for i in 0..3 {
-        packer.add_bin(Bin::new(
-            format!("bin-20gp-01#{i}"),
-            [5898.0, 2393.0, 2352.0],
-            21000.0,
-        ));
-    }
-    let add = |packer: &mut Packer,
-               id: &str,
-               name: &str,
-               whd: [f64; 3],
-               weight: f64,
-               level: i32,
-               loadbear: i32,
-               updown: bool,
-               allowed: f64,
-               count: usize| {
-        for i in 0..count {
-            packer.add_item(Item::new(
-                format!("{id}#{i}"),
-                name,
-                ItemType::Cube,
-                whd,
-                weight,
-                level,
-                loadbear,
-                updown,
-                "#888888",
-                allowed,
-            ));
-        }
-    };
-    add(
-        &mut packer,
-        "item-box-a",
-        "SKU-A",
-        [600.0, 400.0, 500.0],
-        12.5,
-        0,
-        10,
-        true,
-        0.25,
-        150,
-    );
-    add(
-        &mut packer,
-        "item-carton-b",
-        "SKU-B",
-        [280.0, 220.0, 180.0],
-        3.2,
-        0,
-        5,
-        true,
-        0.25,
-        300,
-    );
-    add(
-        &mut packer,
-        "item-machine-c",
-        "SKU-C",
-        [2000.0, 1500.0, 1800.0],
-        800.0,
-        1,
-        100,
-        false,
-        0.0,
-        3,
-    );
-    add(
-        &mut packer,
-        "item-pallet-d",
-        "SKU-D",
-        [1100.0, 1100.0, 1300.0],
-        220.0,
-        0,
-        30,
-        false,
-        0.0,
-        20,
-    );
-    add(
-        &mut packer,
-        "item-long-e",
-        "SKU-E",
-        [13000.0, 3000.0, 3000.0],
-        2000.0,
-        2,
-        0,
-        false,
-        0.0,
-        1,
-    );
-    packer
+    common::seed_packer()
 }
 
 // ---------- 确定性随机扫描 ----------

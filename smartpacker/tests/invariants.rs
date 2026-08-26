@@ -6,11 +6,13 @@
 //! - 确定性:同输入两次运行输出完全一致。
 //! - 修复项:空绑定组跳过、零重量 gravity 不崩溃。
 
+mod common;
+
+use common::{is_legal, FLOAT_RATIOS};
 use proptest::prelude::*;
 use smartpacker::{Bin, Item, ItemType, PackOptions, Packer, RotationType};
 
 const EPS: f64 = 1e-9;
-const FLOAT_RATIOS: [f64; 5] = [0.0, 0.25, 0.5, 0.75, 1.0];
 
 fn cube(partno: &str, whd: [f64; 3], weight: f64, updown: bool, allowed: f64) -> Item {
     Item::new(
@@ -61,65 +63,17 @@ fn check_bin_invariants(bin: &Bin, ctx: &str) {
         }
     }
 
-    // 支撑规则:与算法 put_item 的判定语义一致——
-    // 支持「y1 == y0 托底」的 x/z 投影重叠面积占比 ≥ 1−allowed_float_ratio,
-    // 或底面四角全部落实(兜底)。
+    // 支撑规则:与算法 put_item 的判定语义一致——支撑比 ≥ 1−allowed_float_ratio
+    // 或底面四角全部落实(兜底),判定实现与 no_floating/示例共享(见 common)。
     for item in &bin.items {
-        let [w, _h, d] = item.dimension();
-        let [x, y, z] = item.position;
-        let bottom_area = w * d;
-        if bottom_area <= EPS {
-            continue; // 零底面积退化物品
-        }
-
-        let mut support = 0.0;
-        if y <= EPS {
-            support = bottom_area; // 落箱底:全支撑
-        } else {
-            for other in &bin.items {
-                if std::ptr::eq(item, other) {
-                    continue;
-                }
-                let [ow, _, od] = other.dimension();
-                let [ox, oy, oz] = other.position;
-                let top = oy + other.dimension()[1];
-                if (top - y).abs() > EPS {
-                    continue; // 顶面必须恰好托住底面
-                }
-                let x_ov = (x + w).min(ox + ow) - x.max(ox);
-                let z_ov = (z + d).min(oz + od) - z.max(oz);
-                if x_ov > EPS && z_ov > EPS {
-                    support += x_ov * z_ov;
-                }
-            }
-        }
-        let ratio = support / bottom_area;
-        let min_support = 1.0 - item.allowed_float_ratio;
-
-        let in_support_rect = |cx: f64, cz: f64| -> bool {
-            bin.items.iter().any(|other| {
-                if std::ptr::eq(item, other) {
-                    return false;
-                }
-                let [ow, _, od] = other.dimension();
-                let [ox, oy, oz] = other.position;
-                let top = oy + other.dimension()[1];
-                (top - y).abs() <= EPS
-                    && cx >= ox - EPS
-                    && cx <= ox + ow + EPS
-                    && cz >= oz - EPS
-                    && cz <= oz + od + EPS
-            })
-        };
-        let four_corners = in_support_rect(x, z)
-            && in_support_rect(x + w, z)
-            && in_support_rect(x, z + d)
-            && in_support_rect(x + w, z + d);
-
         assert!(
-            ratio + EPS >= min_support || four_corners,
-            "{ctx}: item {} violates support rule pos=({x},{y},{z}) dims=({w}..,) ratio={ratio:.4} min={min_support:.4} corners={four_corners}",
-            item.partno
+            is_legal(item, bin),
+            "{ctx}: item {} violates support rule pos=({},{},{}) allowed={}",
+            item.partno,
+            item.position[0],
+            item.position[1],
+            item.position[2],
+            item.allowed_float_ratio
         );
     }
 
