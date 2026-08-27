@@ -4,7 +4,7 @@
 //! `plot_box_and_items(...)`），输出 PNG；不追求与 matplotlib 像素级一致。
 //!
 //! - 箱体：黑色线框。
-//! - 物品：立方体绘制三个可见面（顶 + 两个侧面），圆柱体绘制上/下椭圆与侧面示意。
+//! - 物品：立方体绘制三个可见面（顶 + 两个侧面），圆柱体绘制为实体（两端椭圆 + 侧面凸包填充）。
 //! - 可选标注物品 `partno`。
 
 use crate::constants::ItemType;
@@ -142,6 +142,39 @@ fn equal_aspect(
     w *= pad;
     h *= pad;
     (cx - w / 2.0..cx + w / 2.0, cy - h / 2.0..cy + h / 2.0)
+}
+
+/// 2D 点集凸包（Andrew 单调链，返回逆时针极值点）。
+fn convex_hull(mut pts: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
+    if pts.len() < 3 {
+        return pts;
+    }
+    pts.sort_by(|a, b| {
+        a.0.partial_cmp(&b.0)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then(a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+    });
+    let cross = |o: (f64, f64), a: (f64, f64), b: (f64, f64)| {
+        (a.0 - o.0) * (b.1 - o.1) - (a.1 - o.1) * (b.0 - o.0)
+    };
+    let mut lower: Vec<(f64, f64)> = Vec::new();
+    for &p in &pts {
+        while lower.len() >= 2 && cross(lower[lower.len() - 2], lower[lower.len() - 1], p) <= 0.0 {
+            lower.pop();
+        }
+        lower.push(p);
+    }
+    let mut upper: Vec<(f64, f64)> = Vec::new();
+    for &p in pts.iter().rev() {
+        while upper.len() >= 2 && cross(upper[upper.len() - 2], upper[upper.len() - 1], p) <= 0.0 {
+            upper.pop();
+        }
+        upper.push(p);
+    }
+    lower.pop();
+    upper.pop();
+    lower.extend(upper);
+    lower
 }
 
 /// 三维装箱可视化器（对应 Python `Painter`，一次绑定一个箱子）。
@@ -293,7 +326,14 @@ impl<'a> Painter<'a> {
         Ok(())
     }
 
-    /// 绘制一个圆柱体示意（上下椭圆 + 侧面）。
+    /// 绘制一个圆柱体实体（轴沿 z，截面在 x-y 平面）。
+    ///
+    /// 约定与原版 Python Painter 一致：轴线沿 z（深度），截面为 x-y 平面内的椭圆
+    /// （半径 `w/2`、`h/2`），长度 `d`。
+    ///
+    /// 实体化做法：圆柱的投影 = 近端圆与远端圆投影的 Minkowski 和（即两圆投影点的
+    /// 凸包），先用凸包填充侧面，再填充近端端盖；轮廓只画出实体物理边缘 —— 凸包
+    /// （含两端切边与可见的远端弧）与近端整圆，不再勾勒被实体遮挡的远端椭圆。
     #[allow(clippy::too_many_arguments)]
     fn draw_cylinder<DB: DrawingBackend>(
         &self,
@@ -309,44 +349,45 @@ impl<'a> Painter<'a> {
     ) -> io::Result<()> {
         let (w, h, d) = (dim[0], dim[1], dim[2]);
         let rx = w / 2.0;
-        let rz = d / 2.0;
+        let ry = h / 2.0;
         let cx = x + rx;
-        let cz = z + rz;
-        let n = 24usize;
-        let mut bottom: Vec<(f64, f64)> = Vec::with_capacity(n + 1);
-        let mut top: Vec<(f64, f64)> = Vec::with_capacity(n + 1);
+        let cy = y + ry;
+        let n = 48usize;
+        let mut near: Vec<(f64, f64)> = Vec::with_capacity(n);
+        let mut far: Vec<(f64, f64)> = Vec::with_capacity(n);
         for i in 0..n {
             let t = i as f64 / n as f64 * std::f64::consts::TAU;
             let px = cx + rx * t.cos();
-            let pz = cz + rz * t.sin();
-            bottom.push(project([px, y, pz]));
-            top.push(project([px, y + h, pz]));
+            let py = cy + ry * t.sin();
+            near.push(project([px, py, z + d]));
+            far.push(project([px, py, z]));
         }
-        bottom.push(bottom[0]);
-        top.push(top[0]);
 
         let fill = with_alpha(color, alpha);
-        // 侧面（下轮廓正向 + 上轮廓反向）
-        let mut body: Vec<(f64, f64)> = bottom.clone();
-        let mut top_rev: Vec<(f64, f64)> = top.iter().rev().cloned().collect();
-        body.append(&mut top_rev);
+        // 侧面轮廓：凸包填充
+        let mut hull_pts: Vec<(f64, f64)> = near.clone();
+        hull_pts.extend(&far);
+        let mut hull = convex_hull(hull_pts);
         chart
-            .draw_series(std::iter::once(Polygon::new(body, fill)))
+            .draw_series(std::iter::once(Polygon::new(hull.clone(), fill)))
             .map_err(io_err)?;
-        // 顶面
+        // 近端端盖（z+d 朝向相机）
+        let mut cap_near: Vec<(f64, f64)> = near.clone();
+        cap_near.push(near[0]);
         chart
-            .draw_series(std::iter::once(Polygon::new(top.clone(), fill)))
+            .draw_series(std::iter::once(Polygon::new(cap_near.clone(), fill)))
             .map_err(io_err)?;
-        // 轮廓
+        // 轮廓：凸包（含两端切边与可见远端弧）+ 近端整圆
+        hull.push(hull[0]);
         chart
-            .draw_series(std::iter::once(PathElement::new(bottom, BLACK)))
+            .draw_series(std::iter::once(PathElement::new(hull, BLACK)))
             .map_err(io_err)?;
         chart
-            .draw_series(std::iter::once(PathElement::new(top, BLACK)))
+            .draw_series(std::iter::once(PathElement::new(cap_near, BLACK)))
             .map_err(io_err)?;
 
         if !text.is_empty() {
-            let tc = project([cx, y + h / 2.0, cz]);
+            let tc = project([cx, cy, z + d / 2.0]);
             chart
                 .draw_series(std::iter::once(Text::new(
                     text.to_owned(),

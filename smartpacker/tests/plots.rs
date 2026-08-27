@@ -152,6 +152,129 @@ fn render_scenarios_to_png() {
     });
     render_bins(&p, "multi_bin", &out_dir, &mut produced);
 
+    // 场景 4:形状大杂烩(10×8×12 装 8 件正/长方体 + 7 件圆柱体)
+    let mut p = Packer::new();
+    p.add_bin(Bin::new("shapes", [10.0, 8.0, 12.0], 100.0));
+    for (partno, ty, whd, color) in [
+        // 正方体
+        ("cube-a", ItemType::Cube, [3.0, 3.0, 3.0], "red"),
+        ("cube-b", ItemType::Cube, [3.0, 3.0, 3.0], "blue"),
+        ("cube-c", ItemType::Cube, [2.0, 2.0, 2.0], "orange"),
+        ("cube-d", ItemType::Cube, [2.0, 2.0, 2.0], "gray"),
+        // 长方体（长宽高各不相同）
+        ("box-e", ItemType::Cube, [6.0, 2.0, 3.0], "purple"),
+        ("box-f", ItemType::Cube, [5.0, 3.0, 2.0], "brown"),
+        ("box-g", ItemType::Cube, [2.0, 6.0, 4.0], "navy"),
+        ("box-h", ItemType::Cube, [1.0, 4.0, 3.0], "olive"),
+        ("box-i", ItemType::Cube, [4.0, 4.0, 2.0], "cyan"),
+        // 圆柱体（(直径, 直径, 轴向长)，轴线沿 z）
+        ("cyl-a", ItemType::Cylinder, [2.0, 2.0, 4.0], "lawngreen"),
+        ("cyl-b", ItemType::Cylinder, [2.0, 2.0, 4.0], "magenta"),
+        ("cyl-c", ItemType::Cylinder, [1.0, 1.0, 5.0], "yellow"),
+        ("cyl-d", ItemType::Cylinder, [1.0, 1.0, 5.0], "teal"),
+        ("cyl-e", ItemType::Cylinder, [4.0, 4.0, 2.0], "pink"),
+        ("cyl-f", ItemType::Cylinder, [3.0, 3.0, 2.0], "darkgreen"),
+        ("cyl-g", ItemType::Cylinder, [2.0, 2.0, 3.0], "gold"),
+    ] {
+        p.add_item(Item::new(
+            partno,
+            "test",
+            ty,
+            whd,
+            1.0,
+            1,
+            100,
+            ty == ItemType::Cube,
+            color,
+            0.25,
+        ));
+    }
+    p.pack(&PackOptions {
+        bigger_first: true,
+        distribute_items: false,
+        ..PackOptions::default()
+    });
+    render_bins(&p, "shapes_mixed", &out_dir, &mut produced);
+
+    // 场景 5:完整 ex1_cylinder(原版 example1,5.6875×10.75×15 装 13 件)
+    // 圆柱体 whd = (直径, 直径, 轴向长),轴线沿 z;配色同原版 example1.py。
+    let mut p = Packer::new();
+    p.add_bin(Bin::new("example1", [5.6875, 10.75, 15.0], 70.0));
+    for (partno, ty, whd, color) in [
+        ("50g [powder 1]", ItemType::Cube, [2.0, 2.0, 4.0], "red"),
+        ("50g [powder 2]", ItemType::Cube, [2.0, 2.0, 4.0], "blue"),
+        ("50g [powder 3]", ItemType::Cube, [2.0, 2.0, 4.0], "gray"),
+        ("50g [powder 4]", ItemType::Cube, [2.0, 2.0, 4.0], "orange"),
+        (
+            "50g [powder 5]",
+            ItemType::Cylinder,
+            [2.0, 2.0, 4.0],
+            "lawngreen",
+        ),
+        (
+            "50g [powder 6]",
+            ItemType::Cylinder,
+            [2.0, 2.0, 4.0],
+            "purple",
+        ),
+        (
+            "50g [powder 7]",
+            ItemType::Cylinder,
+            [1.0, 1.0, 5.0],
+            "yellow",
+        ),
+        (
+            "250g [powder 8]",
+            ItemType::Cylinder,
+            [4.0, 4.0, 2.0],
+            "pink",
+        ),
+        (
+            "250g [powder 9]",
+            ItemType::Cylinder,
+            [4.0, 4.0, 2.0],
+            "brown",
+        ),
+        ("250g [powder 10]", ItemType::Cube, [4.0, 4.0, 2.0], "cyan"),
+        (
+            "250g [powder 11]",
+            ItemType::Cylinder,
+            [4.0, 4.0, 2.0],
+            "olive",
+        ),
+        (
+            "250g [powder 12]",
+            ItemType::Cylinder,
+            [4.0, 4.0, 2.0],
+            "darkgreen",
+        ),
+        (
+            "250g [powder 13]",
+            ItemType::Cube,
+            [4.0, 4.0, 2.0],
+            "orange",
+        ),
+    ] {
+        p.add_item(Item::new(
+            partno,
+            "test",
+            ty,
+            whd,
+            1.0,
+            1,
+            100,
+            ty == ItemType::Cube,
+            color,
+            0.25,
+        ));
+    }
+    p.pack(&PackOptions {
+        bigger_first: true,
+        distribute_items: false,
+        ..PackOptions::default()
+    });
+    render_bins(&p, "ex1_cylinder", &out_dir, &mut produced);
+
     assert!(!produced.is_empty(), "no png produced");
     for p in &produced {
         let len = fs::metadata(p).map(|m| m.len()).unwrap_or(0);

@@ -380,7 +380,8 @@ Painter::new(&bin)
   维持 canvas 纵横比并留白 12%，画布固定 1024×768。
 - **箱体**：黑色线框（12 条棱）。
 - **立方体**：顶 + 两个可见侧面用 `with_alpha` 混白填充；黑色线框；可选 `partno` 标注。
-- **圆柱体**：上下椭圆 + 侧面多边形示意 + 轮廓。
+- **圆柱体**：实体绘制（轴线沿 z，截面半径 `w/2`、`h/2`）——侧面用近/远端投影圆
+  的凸包填充，端盖整圆填充，轮廓只画物理边缘（凸包 + 近端整圆）。
 - **颜色**：`rgb_from_name` 支持 `#RRGGBB` 与命名色；未知名走确定性哈希（同名同色）。
 - **生成图**：`cargo test --features plot --test plots -- --nocapture` 将自建场景
   （readme_simple / cylinder_mixed / multi_bin）渲染到 `<repo>/target/plots/*.png`。
