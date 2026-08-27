@@ -60,6 +60,8 @@ cargo run --example plot --features plot        # render packing result to PNG
 The algorithm internals (sorting chain, `put_item` heuristics, gravity correction, bottom support, binding groups, center-of-mass distribution),
 data model, numerical semantics and test strategy are fully documented in **[`smartpacker/doc.md`](./smartpacker/doc.md)**.
 
+<img alt="BestLoad" src="./docs/example_plot.png" />
+
 ## smartpacker-server
 
 HTTP packing service (the server-side contract companion for the best-load app), listening on `0.0.0.0:5050` by default:
