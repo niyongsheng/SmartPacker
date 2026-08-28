@@ -9,7 +9,7 @@ A 3D packing algorithm library for load optimization of logistics cabinets and c
 
 <img alt="BestLoad" src="https://github.com/user-attachments/assets/238d8f44-4011-4f69-85ec-ba6e8c44973b" width="100" />
 
-[优载 BestLoad](https://github.com/niyongsheng/best-load)
+[优载 BestLoad](https://github.com/niyongsheng/SmartPacker/issues/1)
 
 ## Features
 
